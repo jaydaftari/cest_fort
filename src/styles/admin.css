@@ -1,0 +1,404 @@
+/* =============================================================
+   C'EST FORT — Admin Theme  (Payload 3.x)
+   Uses CSS variables (most reliable) + Payload's stable BEM classes
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+/* ─────────────────────────────────────────────────────────────
+   CSS VARIABLES — Payload reads these as rgb(var(--color-base-N))
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* Warm ivory → deep ink */
+  --color-base-0:    255, 253, 248;
+  --color-base-50:   251, 248, 242;
+  --color-base-100:  244, 240, 232;
+  --color-base-150:  234, 229, 219;
+  --color-base-200:  220, 214, 202;
+  --color-base-250:  202, 196, 183;
+  --color-base-300:  182, 175, 162;
+  --color-base-350:  158, 151, 138;
+  --color-base-400:  132, 126, 114;
+  --color-base-450:  108, 102,  92;
+  --color-base-500:   86,  81,  72;
+  --color-base-550:   70,  65,  58;
+  --color-base-600:   54,  50,  44;
+  --color-base-650:   40,  37,  32;
+  --color-base-700:   29,  27,  23;
+  --color-base-750:   20,  18,  15;
+  --color-base-800:   13,  12,  10;
+  --color-base-850:    9,   8,   7;
+  --color-base-900:    5,   4,   4;
+  --color-base-950:    2,   2,   1;
+  --color-base-1000:   0,   0,   0;
+
+  /* Gold success */
+  --color-success-50:  255, 250, 238;
+  --color-success-100: 252, 243, 214;
+  --color-success-300: 230, 200, 120;
+  --color-success-500: 192, 144,  48;
+  --color-success-600: 168, 120,  32;
+  --color-success-700: 136,  96,  20;
+  --color-success-800:  84,  58,   8;
+  --color-success-900:  32,  22,   2;
+
+  /* Error crimson */
+  --color-error-500: 180, 28, 28;
+
+  /* Custom tokens */
+  --cf-ink:          #0d0b09;
+  --cf-ink-mid:      #1e1b17;
+  --cf-paper:        #fffdf8;
+  --cf-cream:        #f7f4ee;
+  --cf-warm:         #ede9e1;
+  --cf-border:       #ddd8ce;
+  --cf-border-faint: #eae6de;
+  --cf-muted:        #8c8778;
+  --cf-gold:         #b8902e;
+  --cf-gold-light:   #d4aa50;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ui:      'Syne', system-ui, sans-serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GLOBAL
+   ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+body, #app {
+  font-family: var(--font-ui) !important;
+  background: var(--cf-cream) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NAV SIDEBAR — Payload BEM: .nav, .nav__wrap, .nav__link, etc.
+   ───────────────────────────────────────────────────────────── */
+.nav,
+.nav__wrap {
+  background: var(--cf-ink) !important;
+  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* Group labels */
+.nav__label,
+.nav__group-label {
+  font-family: var(--font-ui) !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.26em !important;
+  text-transform: uppercase !important;
+  color: rgba(255,255,255,0.22) !important;
+  padding: 20px 24px 6px !important;
+}
+
+/* Nav links */
+.nav__link,
+.nav__link a {
+  font-family: var(--font-ui) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em !important;
+  color: rgba(255,255,255,0.6) !important;
+  transition: color 0.15s, background 0.15s !important;
+  border-left: 2px solid transparent !important;
+}
+.nav__link a {
+  display: block !important;
+  padding: 9px 24px !important;
+  text-decoration: none !important;
+}
+.nav__link a:hover {
+  color: rgba(255,255,255,0.9) !important;
+  background: rgba(255,255,255,0.06) !important;
+}
+.nav__link--active > a,
+.nav__link a[aria-current="page"],
+.nav__link a.active {
+  color: #fff !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-left-color: var(--cf-gold) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   APP HEADER — .app-header
+   ───────────────────────────────────────────────────────────── */
+.app-header {
+  background: var(--cf-paper) !important;
+  border-bottom: 1px solid var(--cf-border-faint) !important;
+  box-shadow: none !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* Breadcrumb */
+.step-nav,
+.step-nav a,
+.step-nav span {
+  font-family: var(--font-ui) !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--cf-muted) !important;
+  text-decoration: none !important;
+}
+.step-nav a:hover { color: var(--cf-ink) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN CONTENT SHELL — .template-default
+   ───────────────────────────────────────────────────────────── */
+.template-default,
+.template-default__wrap {
+  background: var(--cf-cream) !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLLECTION LIST TABLE — .table, .cell, .row
+   ───────────────────────────────────────────────────────────── */
+.table {
+  background: var(--cf-paper) !important;
+  border: 1px solid var(--cf-border-faint) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  font-family: var(--font-ui) !important;
+}
+
+.table thead th,
+.table thead td {
+  background: var(--cf-cream) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  color: var(--cf-muted) !important;
+  border-bottom: 1px solid var(--cf-border-faint) !important;
+  padding: 13px 20px !important;
+}
+
+.table tbody tr td {
+  border-bottom: 1px solid var(--cf-border-faint) !important;
+  font-size: 13px !important;
+  color: var(--cf-ink) !important;
+  padding: 13px 20px !important;
+  vertical-align: middle !important;
+  font-family: var(--font-ui) !important;
+}
+.table tbody tr:last-child td { border-bottom: none !important; }
+.table tbody tr:hover td { background: var(--cf-cream) !important; }
+
+/* Cell links */
+.cell-link,
+.row__cell a,
+.table a {
+  color: var(--cf-ink) !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  font-family: var(--font-ui) !important;
+}
+.table a:hover { color: var(--cf-gold) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   FORM FIELDS — .field-label, .field-type
+   ───────────────────────────────────────────────────────────── */
+.field-label,
+label.field-label {
+  font-family: var(--font-ui) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--cf-muted) !important;
+}
+
+.field-type input[type="text"],
+.field-type input[type="email"],
+.field-type input[type="url"],
+.field-type input[type="password"],
+.field-type input[type="number"],
+.field-type textarea,
+.field-type select {
+  background: var(--cf-cream) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-ui) !important;
+  font-size: 13.5px !important;
+  color: var(--cf-ink) !important;
+  padding: 10px 14px !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.field-type input:focus,
+.field-type textarea:focus {
+  border-color: var(--cf-ink) !important;
+  box-shadow: 0 0 0 3px rgba(13,11,9,0.05) !important;
+  outline: none !important;
+  background: var(--cf-paper) !important;
+}
+
+.field-description {
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  font-style: italic !important;
+  color: var(--cf-muted) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BUTTONS — .btn
+   ───────────────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font-ui) !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  border-radius: 2px !important;
+  transition: background 0.15s, color 0.15s, border-color 0.15s !important;
+}
+
+.btn--style-primary {
+  background: var(--cf-ink) !important;
+  color: var(--cf-paper) !important;
+  border-color: var(--cf-ink) !important;
+}
+.btn--style-primary:hover {
+  background: var(--cf-ink-mid) !important;
+  border-color: var(--cf-ink-mid) !important;
+}
+
+.btn--style-secondary {
+  background: transparent !important;
+  border: 1px solid var(--cf-border) !important;
+  color: var(--cf-ink) !important;
+}
+.btn--style-secondary:hover {
+  background: var(--cf-cream) !important;
+  border-color: #bdb8ae !important;
+}
+
+.btn--style-error {
+  background: #b41c1c !important;
+  border-color: #b41c1c !important;
+  color: #fff !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PILLS / STATUS BADGES — .pill
+   ───────────────────────────────────────────────────────────── */
+.pill {
+  font-family: var(--font-ui) !important;
+  font-size: 8.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  border-radius: 2px !important;
+}
+
+.pill--style-success {
+  background: rgba(184,144,46,0.1) !important;
+  color: #7a5c14 !important;
+  border: 1px solid rgba(184,144,46,0.25) !important;
+}
+.pill--style-light {
+  background: rgba(13,11,9,0.05) !important;
+  color: var(--cf-muted) !important;
+  border: 1px solid var(--cf-border-faint) !important;
+}
+.pill--style-error {
+  background: rgba(180,28,28,0.07) !important;
+  color: #b41c1c !important;
+  border: 1px solid rgba(180,28,28,0.18) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DOCUMENT CONTROLS / SIDEBAR
+   ───────────────────────────────────────────────────────────── */
+.document-header,
+.collection-edit__header {
+  background: var(--cf-paper) !important;
+  border-bottom: 1px solid var(--cf-border-faint) !important;
+  font-family: var(--font-ui) !important;
+}
+
+.document-sidebar,
+.collection-edit__sidebar-wrap {
+  background: var(--cf-paper) !important;
+  border-left: 1px solid var(--cf-border-faint) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   REACT SELECT (dropdowns)
+   ───────────────────────────────────────────────────────────── */
+.rs__control {
+  background: var(--cf-cream) !important;
+  border-color: var(--cf-border) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-ui) !important;
+  box-shadow: none !important;
+}
+.rs__control--is-focused {
+  border-color: var(--cf-ink) !important;
+  box-shadow: 0 0 0 3px rgba(13,11,9,0.05) !important;
+}
+.rs__menu {
+  background: var(--cf-paper) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 12px 40px rgba(13,11,9,0.14) !important;
+  font-family: var(--font-ui) !important;
+}
+.rs__option {
+  font-size: 13px !important;
+  font-family: var(--font-ui) !important;
+  color: var(--cf-ink) !important;
+}
+.rs__option--is-focused { background: var(--cf-cream) !important; }
+.rs__option--is-selected { background: var(--cf-ink) !important; color: var(--cf-paper) !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   HEADINGS in content area
+   ───────────────────────────────────────────────────────────── */
+.collection-list__header h1,
+.collection-edit__header h1,
+.render-title h1,
+.render-title {
+  font-family: var(--font-display) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--cf-ink) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCROLLBAR
+   ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cf-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bdb8ae; }
+
+/* ─────────────────────────────────────────────────────────────
+   FOCUS RING
+   ───────────────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--cf-gold) !important;
+  outline-offset: 2px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CODE / MONO
+   ───────────────────────────────────────────────────────────── */
+code, pre {
+  font-family: var(--font-mono) !important;
+  font-size: 12.5px !important;
+  background: var(--cf-warm) !important;
+  border: 1px solid var(--cf-border-faint) !important;
+  border-radius: 2px !important;
+}
+
+/* Misc dividers */
+hr { border-color: var(--cf-border-faint) !important; }
