@@ -36,15 +36,15 @@ async function seed() {
     })
 
     if (existing.docs.length > 0) {
-      console.log(`[skip] ${cat.name} already exists`)
+      console.info(`[skip] ${cat.name} already exists`)
       continue
     }
 
     await payload.create({ collection: 'categories', data: cat })
-    console.log(`[created] ${cat.name}`)
+    console.info(`[created] ${cat.name}`)
   }
 
-  console.log('Seed complete.')
+  console.info('Seed complete.')
   process.exit(0)
 }
 

@@ -5,7 +5,23 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { createLogger } from '@/lib/logger'
 import Link from 'next/link'
+import { Bodoni_Moda, Hanken_Grotesk } from 'next/font/google'
 import LogoutButton from './LogoutButton'
+
+const bodoni = Bodoni_Moda({
+  subsets: ['latin'],
+  weight: ['400', '700', '900'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-bodoni',
+})
+
+const hanken = Hanken_Grotesk({
+  subsets: ['latin'],
+  weight: ['100', '400', '500', '600', '700', '900'],
+  display: 'swap',
+  variable: '--font-hanken',
+})
 
 const logger = createLogger('EditorialLayout')
 
@@ -27,19 +43,13 @@ export default async function EditorialLayout({ children }: { children: ReactNod
   logger.debug('Editorial access granted', { email: user.email, role: user.role })
 
   return (
-    <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400..900;1,400..900&family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={`${bodoni.variable} ${hanken.variable}`}>
       <body
         style={{
           margin: 0,
           background: '#f9f9f9',
           color: '#1a1c1c',
-          fontFamily: "'Hanken Grotesk', sans-serif",
+          fontFamily: 'var(--font-hanken), sans-serif',
         }}
       >
         {/* ── Top navigation bar ── */}
@@ -61,7 +71,7 @@ export default async function EditorialLayout({ children }: { children: ReactNod
             <Link href="/" style={{ textDecoration: 'none' }}>
               <span
                 style={{
-                  fontFamily: "'Bodoni Moda', Georgia, serif",
+                  fontFamily: 'var(--font-bodoni), Georgia, serif',
                   fontSize: 20,
                   fontWeight: 700,
                   letterSpacing: '0.14em',

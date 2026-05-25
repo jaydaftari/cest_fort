@@ -10,6 +10,7 @@
     "lint:fix": "eslint src --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "postbuild": "prettier --write \"src/app/(payload)/admin/importMap.js\"",
     "payload": "cross-env PAYLOAD_CONFIG_PATH=src/payload.config.ts payload"
   },
   "dependencies": {
@@ -27,7 +28,7 @@
     "@tiptap/starter-kit": "^2.27.2",
     "cross-env": "^7.0.3",
     "graphql": "^16.9.0",
-    "next": "15.3.3",
+    "next": "^15.3.9",
     "payload": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
