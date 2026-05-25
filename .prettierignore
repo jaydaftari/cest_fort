@@ -3,3 +3,4 @@ node_modules
 public
 *.min.js
 src/app/(payload)/importMap.js
+src/payload-types.ts
