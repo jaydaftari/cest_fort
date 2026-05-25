@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { createLogger } from '../lib/logger'
+import { SLOTS } from '../lib/slots'
+import { estimateReadTime, lexicalToPlainText } from '../lib/utils'
 
 const logger = createLogger('Collection:Articles')
 
@@ -36,6 +38,12 @@ export const Articles: CollectionConfig = {
           user: req.user?.email,
           workflowStatus: data?.workflowStatus,
         })
+
+        // Auto-calculate read time from Lexical content
+        if (data.content) {
+          const plainText = lexicalToPlainText(data.content)
+          data = { ...data, readTime: estimateReadTime(plainText) }
+        }
 
         // Auto-set submittedAt on first creation without a logged-in user
         if (operation === 'create' && !req.user && !data.submittedAt) {
@@ -125,7 +133,8 @@ export const Articles: CollectionConfig = {
       type: 'text',
       label: 'Hero Image URL',
       admin: {
-        description: 'External image URL for contributor submissions. Overridden by Hero Image upload.',
+        description:
+          'External image URL for contributor submissions. Overridden by Hero Image upload.',
       },
     },
 
@@ -189,7 +198,6 @@ export const Articles: CollectionConfig = {
     {
       name: 'authorUrl',
       type: 'text',
-      required: true,
       label: 'Author URL',
       admin: {
         description: 'Personal website, LinkedIn, or portfolio link. Shown on published articles.',
@@ -208,13 +216,26 @@ export const Articles: CollectionConfig = {
       label: 'Read Time (minutes)',
       admin: {
         position: 'sidebar',
-        description: 'Auto-estimated or enter manually',
+        readOnly: true,
+        description: 'Calculated automatically from article content on every save.',
+      },
+    },
+    {
+      name: 'views',
+      type: 'number',
+      label: 'Views',
+      defaultValue: 0,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Total view count. Updated programmatically.',
       },
     },
     {
       name: 'publishedAt',
       type: 'date',
       label: 'Published Date',
+      index: true,
       admin: {
         position: 'sidebar',
         date: { pickerAppearance: 'dayAndTime' },
@@ -231,12 +252,30 @@ export const Articles: CollectionConfig = {
       },
     },
 
+    // ── Placement ─────────────────────────────────────────────
+    // Stored as plain text (not a select/enum) so adding new slot IDs
+    // never requires a DB enum migration.
+    {
+      name: 'placement',
+      type: 'text',
+      label: 'Page Placement',
+      defaultValue: '',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Slot ID assigned by the editorial panel. Values: ' + SLOTS.map((s) => s.id).join(', '),
+        readOnly: true,
+      },
+    },
+
     // ── Editorial workflow ─────────────────────────────────────
     {
       name: 'workflowStatus',
       type: 'select',
       defaultValue: 'submitted',
       label: 'Workflow Status',
+      index: true,
       admin: {
         position: 'sidebar',
         description: 'Internal editorial pipeline status',

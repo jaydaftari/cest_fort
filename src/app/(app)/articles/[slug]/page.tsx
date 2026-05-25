@@ -8,8 +8,23 @@ import RichTextRenderer from '@/components/ui/RichTextRenderer'
 import { RelatedCard } from '@/components/ui/ArticleCard'
 import { createLogger } from '@/lib/logger'
 import { getMockBySlug, getMockByCategory } from '@/mock-data/articles'
+import JsonLd from '@/components/seo/JsonLd'
+import { ShareButtons } from '@/components/ui/ShareButtons'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
+
+export async function generateStaticParams() {
+  const payload = await getPayloadClient()
+  const { docs } = await payload.find({
+    collection: 'articles',
+    where: { _status: { equals: 'published' } },
+    limit: 50,
+    sort: '-publishedAt',
+    depth: 0,
+    select: { slug: true },
+  })
+  return docs.map((a) => ({ slug: a.slug as string }))
+}
 
 const logger = createLogger('Page:Article')
 
@@ -37,11 +52,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: (article.seoTitle as string) ?? (article.title as string),
     description: (article.seoDescription as string) ?? (article.dek as string) ?? undefined,
     openGraph: {
-      title: (article.title as string),
+      title: article.title as string,
       description: (article.dek as string) ?? undefined,
-      images: article.heroImageUrl
-        ? [{ url: article.heroImageUrl as string }]
-        : [],
+      images: article.heroImageUrl ? [{ url: article.heroImageUrl as string }] : [],
     },
   }
 }
@@ -60,8 +73,8 @@ export default async function ArticlePage({ params }: PageProps) {
     depth: 2,
   })
 
-  type Doc = typeof result.docs[number]
-  const article: Doc = (result.docs[0] ?? getMockBySlug(slug) as unknown as Doc)
+  type Doc = (typeof result.docs)[number]
+  const article: Doc = result.docs[0] ?? (getMockBySlug(slug) as unknown as Doc)
 
   if (!article) {
     logger.warn('Article not found or not published', { slug })
@@ -71,67 +84,91 @@ export default async function ArticlePage({ params }: PageProps) {
   logger.debug('Article found', { id: article.id, title: article.title })
 
   const category = article.category as { id?: string | number; name: string; slug: string } | null
-  const heroMedia = article.heroImage as { url?: string; sizes?: { hero?: { url?: string } } } | null
-  const heroImageUrl = heroMedia?.sizes?.hero?.url ?? heroMedia?.url ?? (article.heroImageUrl as string | null)
+  const heroMedia = article.heroImage as {
+    url?: string
+    sizes?: { hero?: { url?: string } }
+  } | null
+  const heroImageUrl =
+    heroMedia?.sizes?.hero?.url ?? heroMedia?.url ?? (article.heroImageUrl as string | null)
 
   // Estimate read time if not set by editor
   const readTime =
-    (article.readTime as number | null) ??
-    estimateReadTime(lexicalToPlainText(article.content))
+    (article.readTime as number | null) ?? estimateReadTime(lexicalToPlainText(article.content))
 
   // Fetch related articles from same category.
   // Only query the DB when we have a valid integer category ID (real articles);
   // mock articles have no numeric ID so skip to the mock fallback below.
   const catId = Number(category?.id)
-  const relatedResult = category && !isNaN(catId)
-    ? await payload.find({
-        collection: 'articles',
-        where: {
-          and: [
-            { _status: { equals: 'published' } },
-            { category: { equals: catId } },
-            { slug: { not_equals: slug } },
-          ],
-        },
-        limit: 3,
-        sort: '-publishedAt',
-        depth: 2,
-      })
-    : { docs: [] }
+  const relatedResult =
+    category && !isNaN(catId)
+      ? await payload.find({
+          collection: 'articles',
+          where: {
+            and: [
+              { _status: { equals: 'published' } },
+              { category: { equals: catId } },
+              { slug: { not_equals: slug } },
+            ],
+          },
+          limit: 3,
+          sort: '-publishedAt',
+          depth: 2,
+        })
+      : { docs: [] }
 
-  type RelatedDoc = typeof relatedResult.docs[number]
-  const relatedDocs: RelatedDoc[] = relatedResult.docs.length > 0
-    ? relatedResult.docs
-    : (getMockByCategory(category?.slug ?? '').filter((a) => a.slug !== slug).slice(0, 3) as unknown as RelatedDoc[])
+  type RelatedDoc = (typeof relatedResult.docs)[number]
+  const relatedDocs: RelatedDoc[] =
+    relatedResult.docs.length > 0
+      ? relatedResult.docs
+      : (getMockByCategory(category?.slug ?? '')
+          .filter((a) => a.slug !== slug)
+          .slice(0, 3) as unknown as RelatedDoc[])
 
   logger.info('Article page render complete', {
     slug,
     relatedCount: relatedResult.docs.length,
   })
 
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title as string,
+    ...(article.dek ? { description: article.dek as string } : {}),
+    author: {
+      '@type': 'Person',
+      name: article.authorName as string,
+      ...(article.authorUrl ? { url: article.authorUrl as string } : {}),
+    },
+    ...(article.publishedAt ? { datePublished: article.publishedAt as string } : {}),
+    ...(heroImageUrl ? { image: heroImageUrl } : {}),
+  }
+
   return (
     <article className="article-page">
+      <JsonLd data={articleSchema} />
       <div className="article-shell">
         {/* Back link */}
         <Link
           className="article-back"
-          href={category ? `/${category.slug}` : '/'}
+          href={
+            category
+              ? category.slug === 'leaders-stories'
+                ? '/leaders'
+                : `/${category.slug}`
+              : '/'
+          }
         >
           ← {category?.name?.toUpperCase() ?? 'HOME'}
         </Link>
 
         {/* Eyebrow */}
-        {category && (
-          <p className="article-eyebrow">{category.name.toUpperCase()}</p>
-        )}
+        {category && <p className="article-eyebrow">{category.name.toUpperCase()}</p>}
 
         {/* Headline */}
         <h1 className="article-title">{article.title as string}</h1>
 
         {/* Dek */}
-        {article.dek && (
-          <p className="article-dek">{article.dek as string}</p>
-        )}
+        {article.dek && <p className="article-dek">{article.dek as string}</p>}
 
         {/* Byline */}
         <div className="article-byline">
@@ -145,7 +182,12 @@ export default async function ArticlePage({ params }: PageProps) {
           />
           <div className="byline-text">
             {article.authorUrl ? (
-              <a className="author author--link" href={article.authorUrl as string} target="_blank" rel="noopener noreferrer">
+              <a
+                className="author author--link"
+                href={article.authorUrl as string}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {article.authorName as string}
               </a>
             ) : (
@@ -160,6 +202,12 @@ export default async function ArticlePage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {/* Share buttons */}
+        <ShareButtons
+          url={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://cestfort.com'}/articles/${slug}`}
+          title={article.title as string}
+        />
 
         {/* Hero image */}
         {heroImageUrl && (
@@ -176,33 +224,9 @@ export default async function ArticlePage({ params }: PageProps) {
         )}
 
         {/* Body content */}
-        <RichTextRenderer content={article.content as Parameters<typeof RichTextRenderer>[0]['content']} />
-
-        {/* Author card */}
-        <div className="article-tail">
-          <div className="author-card">
-            <span
-              className="author-dot"
-              style={
-                article.authorAvatarUrl
-                  ? { backgroundImage: `url(${article.authorAvatarUrl as string})` }
-                  : {}
-              }
-            />
-            <div>
-              {article.authorUrl ? (
-                <a className="author-card__name author-card__name--link" href={article.authorUrl as string} target="_blank" rel="noopener noreferrer">
-                  {article.authorName as string}
-                </a>
-              ) : (
-                <h4>{article.authorName as string}</h4>
-              )}
-              {article.authorBio && (
-                <p>{article.authorBio as string}</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <RichTextRenderer
+          content={article.content as Parameters<typeof RichTextRenderer>[0]['content']}
+        />
 
         {/* Related articles */}
         {relatedDocs.length > 0 && (
@@ -210,7 +234,10 @@ export default async function ArticlePage({ params }: PageProps) {
             <h3>MORE FROM {category?.name?.toUpperCase() ?? "C'EST FORT"}</h3>
             <div className="related-grid">
               {relatedDocs.map((related) => {
-                const relatedMedia = related.heroImage as { url?: string; sizes?: { thumbnail?: { url?: string } } } | null
+                const relatedMedia = related.heroImage as {
+                  url?: string
+                  sizes?: { thumbnail?: { url?: string } }
+                } | null
                 return (
                   <RelatedCard
                     key={String(related.id)}

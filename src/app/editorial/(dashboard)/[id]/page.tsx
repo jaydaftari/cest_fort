@@ -5,23 +5,15 @@ import { headers } from 'next/headers'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { createLogger } from '@/lib/logger'
-import { estimateReadTime, lexicalToPlainText } from '@/lib/utils'
+import { estimateReadTime, lexicalToPlainText, formatEditorialDateTime } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/StatusBadge'
+import type { WorkflowStatus } from '@/components/ui/StatusBadge'
 import RichTextRenderer from '@/components/ui/RichTextRenderer'
 import ReviewActions from './ReviewActions'
 
 export const dynamic = 'force-dynamic'
 
 const logger = createLogger('Page:EditorialReview')
-
-type WorkflowStatus = 'submitted' | 'in_review' | 'approved' | 'rejected'
-
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -55,122 +47,143 @@ export default async function ArticleReviewPage({ params }: PageProps) {
   const category = article.category as { name?: string; slug?: string } | null
   const heroMedia = article.heroImage as { url?: string } | null
   const heroImageUrl = heroMedia?.url ?? (article.heroImageUrl as string | null)
-  const readTime = (article.readTime as number | null) ?? estimateReadTime(lexicalToPlainText(article.content))
-
-  const STATUS_META: Record<WorkflowStatus, { label: string; bg: string; color: string; dot: string }> = {
-    submitted:  { label: 'Submitted',  bg: '#EFF6FF', color: '#1E40AF', dot: '#3B82F6' },
-    in_review:  { label: 'In Review',  bg: '#FFFBEB', color: '#92400E', dot: '#D97706' },
-    approved:   { label: 'Approved',   bg: '#F0FDF4', color: '#14532D', dot: '#16A34A' },
-    rejected:   { label: 'Rejected',   bg: '#FEF2F2', color: '#7F1D1D', dot: '#DC2626' },
-  }
-  const sm = STATUS_META[status]
+  const readTime =
+    (article.readTime as number | null) ?? estimateReadTime(lexicalToPlainText(article.content))
 
   return (
     <main style={{ padding: '32px 32px 80px', maxWidth: 1200, margin: '0 auto' }}>
-
       {/* ── Top bar ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 16,
-        marginBottom: 36,
-        paddingBottom: 24, borderBottom: '1px solid #cfc4c5',
-      }}>
-        <Link href="/editorial" style={{
-          fontSize: 11, fontWeight: 700, letterSpacing: '0.14em',
-          textTransform: 'uppercase', textDecoration: 'none', color: '#5d5f5f',
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          marginBottom: 36,
+          paddingBottom: 24,
+          borderBottom: '1px solid #cfc4c5',
+        }}
+      >
+        <Link
+          href="/editorial"
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            textDecoration: 'none',
+            color: '#5d5f5f',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
           ← All Submissions
         </Link>
         <span style={{ color: '#cfc4c5' }}>·</span>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: '3px 10px 3px 8px',
-          background: sm.bg, color: sm.color, borderRadius: 2,
-          fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase',
-        }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: sm.dot }} />
-          {sm.label}
-        </span>
+        <StatusBadge status={status} />
         <div style={{ flex: 1 }} />
-        <a
-          href={`/admin/collections/articles/${article.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.14em',
-            textTransform: 'uppercase', textDecoration: 'none', color: '#5d5f5f',
-            border: '1px solid #cfc4c5', borderRadius: 2, padding: '7px 14px',
-          }}
-        >
-          Edit in CMS ↗
-        </a>
       </div>
 
       {/* ── Two-column layout ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 48, alignItems: 'start' }}>
-
+      <div
+        style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 48, alignItems: 'start' }}
+      >
         {/* ── Left: Article preview ── */}
         <div>
           {/* Category eyebrow */}
           {category?.name && (
-            <p style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: '0.22em',
-              textTransform: 'uppercase', color: '#5d5f5f', marginBottom: 14,
-            }}>
+            <p
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: '#5d5f5f',
+                marginBottom: 14,
+              }}
+            >
               {category.name}
             </p>
           )}
 
           {/* Headline */}
-          <h1 style={{
-            fontFamily: "'Bodoni Moda', Georgia, serif",
-            fontSize: 'clamp(28px, 4vw, 48px)',
-            fontWeight: 500, lineHeight: 1.15,
-            color: '#000', marginBottom: 16,
-          }}>
+          <h1
+            style={{
+              fontFamily: "'Bodoni Moda', Georgia, serif",
+              fontSize: 'clamp(28px, 4vw, 48px)',
+              fontWeight: 500,
+              lineHeight: 1.15,
+              color: '#000',
+              marginBottom: 16,
+            }}
+          >
             {article.title as string}
           </h1>
 
           {/* Dek */}
           {article.dek && (
-            <p style={{
-              fontSize: 18, lineHeight: 1.55, color: '#3a3a3a',
-              fontWeight: 300, marginBottom: 24,
-              borderLeft: '3px solid #cfc4c5', paddingLeft: 16,
-            }}>
+            <p
+              style={{
+                fontSize: 18,
+                lineHeight: 1.55,
+                color: '#3a3a3a',
+                fontWeight: 300,
+                marginBottom: 24,
+                borderLeft: '3px solid #cfc4c5',
+                paddingLeft: 16,
+              }}
+            >
               {article.dek as string}
             </p>
           )}
 
           {/* Byline */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 14,
-            marginBottom: 32, paddingBottom: 28, borderBottom: '1px solid #e8e3de',
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: '50%',
-              background: '#e8e3de',
-              backgroundImage: article.authorAvatarUrl ? `url(${article.authorAvatarUrl as string})` : undefined,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              flexShrink: 0,
-            }} />
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              marginBottom: 32,
+              paddingBottom: 28,
+              borderBottom: '1px solid #e8e3de',
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: '#e8e3de',
+                backgroundImage: article.authorAvatarUrl
+                  ? `url(${article.authorAvatarUrl as string})`
+                  : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                flexShrink: 0,
+              }}
+            />
             <div>
               <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 2px', color: '#000' }}>
                 {article.authorName as string}
               </p>
               <p style={{ fontSize: 11, color: '#5d5f5f', margin: 0 }}>
                 {readTime} min read
-                {article.submittedAt && ` · Submitted ${formatDate(article.submittedAt as string)}`}
+                {article.submittedAt &&
+                  ` · Submitted ${formatEditorialDateTime(article.submittedAt as string)}`}
               </p>
             </div>
           </div>
 
           {/* Hero image */}
           {heroImageUrl && (
-            <div style={{
-              marginBottom: 32, borderRadius: 3, overflow: 'hidden',
-              border: '1px solid #e8e3de',
-            }}>
+            <div
+              style={{
+                marginBottom: 32,
+                borderRadius: 3,
+                overflow: 'hidden',
+                border: '1px solid #e8e3de',
+              }}
+            >
               <Image
                 src={heroImageUrl}
                 alt={article.title as string}
@@ -182,9 +195,13 @@ export default async function ArticleReviewPage({ params }: PageProps) {
           )}
 
           {/* Body */}
-          <div style={{
-            fontSize: 16, lineHeight: 1.75, color: '#1a1c1c',
-          }}>
+          <div
+            style={{
+              fontSize: 16,
+              lineHeight: 1.75,
+              color: '#1a1c1c',
+            }}
+          >
             <style>{`
               .editorial-body p { margin: 0 0 1.5em; }
               .editorial-body h2 { font-family: 'Bodoni Moda', Georgia, serif; font-size: 26px; font-weight: 500; margin: 2em 0 0.75em; }
@@ -206,17 +223,30 @@ export default async function ArticleReviewPage({ params }: PageProps) {
 
           {/* Author bio card */}
           {article.authorBio && (
-            <div style={{
-              marginTop: 48, padding: '24px 28px',
-              background: '#fff', border: '1px solid #cfc4c5', borderRadius: 3,
-            }}>
+            <div
+              style={{
+                marginTop: 48,
+                padding: '24px 28px',
+                background: '#fff',
+                border: '1px solid #cfc4c5',
+                borderRadius: 3,
+              }}
+            >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: '50%',
-                  background: '#e8e3de', flexShrink: 0,
-                  backgroundImage: article.authorAvatarUrl ? `url(${article.authorAvatarUrl as string})` : undefined,
-                  backgroundSize: 'cover', backgroundPosition: 'center',
-                }} />
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: '#e8e3de',
+                    flexShrink: 0,
+                    backgroundImage: article.authorAvatarUrl
+                      ? `url(${article.authorAvatarUrl as string})`
+                      : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>
                     {article.authorName as string}
@@ -233,14 +263,25 @@ export default async function ArticleReviewPage({ params }: PageProps) {
         {/* ── Right: Sidebar ── */}
         <aside style={{ position: 'sticky', top: 88 }}>
           {/* Submission details card */}
-          <div style={{
-            background: '#fff', border: '1px solid #cfc4c5',
-            borderRadius: 3, padding: '24px', marginBottom: 16,
-          }}>
-            <h3 style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.22em',
-              textTransform: 'uppercase', color: '#aaa', margin: '0 0 16px',
-            }}>
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #cfc4c5',
+              borderRadius: 3,
+              padding: '24px',
+              marginBottom: 16,
+            }}
+          >
+            <h3
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: '#aaa',
+                margin: '0 0 16px',
+              }}
+            >
               Submission Details
             </h3>
 
@@ -249,24 +290,46 @@ export default async function ArticleReviewPage({ params }: PageProps) {
                 { label: 'Author', value: article.authorName as string },
                 { label: 'Email', value: article.authorEmail as string | undefined },
                 { label: 'Section', value: category?.name },
-                { label: 'Submitted', value: formatDate(article.submittedAt as string | null) },
+                {
+                  label: 'Submitted',
+                  value: formatEditorialDateTime(article.submittedAt as string | null),
+                },
                 { label: 'Read time', value: `${readTime} min` },
                 { label: 'Article ID', value: `#${article.id}` },
               ] as const
             ).map(({ label, value }) =>
               value ? (
-                <div key={label} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
-                  padding: '8px 0', borderBottom: '1px solid #f0ebe6',
-                  gap: 12,
-                }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, letterSpacing: '0.12em',
-                    textTransform: 'uppercase', color: '#aaa', flexShrink: 0,
-                  }}>
+                <div
+                  key={label}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    padding: '8px 0',
+                    borderBottom: '1px solid #f0ebe6',
+                    gap: 12,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: '#aaa',
+                      flexShrink: 0,
+                    }}
+                  >
                     {label}
                   </span>
-                  <span style={{ fontSize: 12, color: '#1a1c1c', textAlign: 'right', wordBreak: 'break-all' }}>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: '#1a1c1c',
+                      textAlign: 'right',
+                      wordBreak: 'break-all',
+                    }}
+                  >
                     {value}
                   </span>
                 </div>
@@ -275,20 +338,31 @@ export default async function ArticleReviewPage({ params }: PageProps) {
           </div>
 
           {/* Review actions card */}
-          <div style={{
-            background: '#fff', border: '1px solid #cfc4c5',
-            borderRadius: 3, padding: '24px',
-          }}>
-            <h3 style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.22em',
-              textTransform: 'uppercase', color: '#aaa', margin: '0 0 16px',
-            }}>
+          <div
+            style={{
+              background: '#fff',
+              border: '1px solid #cfc4c5',
+              borderRadius: 3,
+              padding: '24px',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: '#aaa',
+                margin: '0 0 16px',
+              }}
+            >
               Editorial Decision
             </h3>
 
             <ReviewActions
               articleId={String(article.id)}
               currentStatus={status}
+              currentPlacement={article.placement as string | null}
               editorialNote={article.editorialNote as string | null}
             />
           </div>

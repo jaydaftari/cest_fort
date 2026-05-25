@@ -40,13 +40,13 @@ type LexicalContent = {
 
 const applyTextFormat = (text: string, format: TextFormat): ReactNode => {
   let node: ReactNode = text
-  if (format & 1) node = <strong>{node}</strong>     // bold
-  if (format & 2) node = <em>{node}</em>              // italic
-  if (format & 8) node = <u>{node}</u>               // underline
-  if (format & 4) node = <s>{node}</s>               // strikethrough
-  if (format & 16) node = <code>{node}</code>        // inline code
-  if (format & 32) node = <sub>{node}</sub>          // subscript
-  if (format & 64) node = <sup>{node}</sup>          // superscript
+  if (format & 1) node = <strong>{node}</strong> // bold
+  if (format & 2) node = <em>{node}</em> // italic
+  if (format & 8) node = <u>{node}</u> // underline
+  if (format & 4) node = <s>{node}</s> // strikethrough
+  if (format & 16) node = <code>{node}</code> // inline code
+  if (format & 32) node = <sub>{node}</sub> // subscript
+  if (format & 64) node = <sup>{node}</sup> // superscript
   return node
 }
 
@@ -58,11 +58,7 @@ const renderNode = (node: LexicalNode, key: string): ReactNode => {
     case 'text': {
       if (!node.text) return null
       const format = node.format ?? 0
-      return (
-        <span key={key}>
-          {format ? applyTextFormat(node.text, format) : node.text}
-        </span>
-      )
+      return <span key={key}>{format ? applyTextFormat(node.text, format) : node.text}</span>
     }
 
     case 'paragraph': {
@@ -78,17 +74,15 @@ const renderNode = (node: LexicalNode, key: string): ReactNode => {
 
     case 'list': {
       const children = node.children ? renderChildren(node.children, key) : null
-      return node.listType === 'number'
-        ? <ol key={key}>{children}</ol>
-        : <ul key={key}>{children}</ul>
+      return node.listType === 'number' ? (
+        <ol key={key}>{children}</ol>
+      ) : (
+        <ul key={key}>{children}</ul>
+      )
     }
 
     case 'listitem': {
-      return (
-        <li key={key}>
-          {node.children ? renderChildren(node.children, key) : null}
-        </li>
-      )
+      return <li key={key}>{node.children ? renderChildren(node.children, key) : null}</li>
     }
 
     case 'quote': {

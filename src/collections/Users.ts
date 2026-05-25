@@ -14,7 +14,7 @@ export const Users: CollectionConfig = {
   // Only admins can create / delete users — no public self-registration
   access: {
     create: ({ req: { user } }) => user?.role === 'admin',
-    read:   ({ req: { user } }) => Boolean(user),
+    read: ({ req: { user } }) => Boolean(user),
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => user?.role === 'admin',
   },

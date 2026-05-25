@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [email, setEmail]         = useState('')
-  const [password, setPassword]   = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [loading, setLoading]     = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ email, password }),
         credentials: 'include',
       })
-      const data = await res.json() as { errors?: { message: string }[] }
+      const data = (await res.json()) as { errors?: { message: string }[] }
       if (!res.ok) throw new Error(data.errors?.[0]?.message ?? 'Invalid credentials.')
       router.push('/admin')
       router.refresh()
@@ -334,7 +334,6 @@ export default function AdminLoginPage() {
       `}</style>
 
       <div className="login-root">
-
         {/* ── Left: editorial cover ── */}
         <div className="login-cover">
           <div className="cover-issue">
@@ -353,7 +352,11 @@ export default function AdminLoginPage() {
         {/* ── Right: login form ── */}
         <div className="login-panel">
           <p className="login-eyebrow">Editorial Access</p>
-          <h1 className="login-heading">Welcome<br />back.</h1>
+          <h1 className="login-heading">
+            Welcome
+            <br />
+            back.
+          </h1>
           <p className="login-sub">Sign in to the content studio.</p>
 
           <form className="login-form" onSubmit={handleSubmit}>
@@ -386,19 +389,37 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   className="login-pw-toggle"
-                  onClick={() => setShowPassword(v => !v)}
+                  onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
                   )}
                 </button>
@@ -407,22 +428,19 @@ export default function AdminLoginPage() {
 
             {error && <p className="login-error">{error}</p>}
 
-            <button
-              type="submit"
-              className="login-btn"
-              disabled={loading}
-            >
+            <button type="submit" className="login-btn" disabled={loading}>
               {loading ? 'Signing in…' : 'Enter the studio'}
             </button>
           </form>
 
           <div className="login-footer">
             <div className="login-footer-rule" />
-            <span className="login-footer-text">© {new Date().getFullYear()} C&apos;est Fort Publications</span>
+            <span className="login-footer-text">
+              © {new Date().getFullYear()} C&apos;est Fort Publications
+            </span>
             <div className="login-footer-rule" />
           </div>
         </div>
-
       </div>
     </>
   )

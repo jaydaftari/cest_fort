@@ -23,18 +23,19 @@ type ArticleCardProps = {
   authorAvatarUrl?: string | null
   publishedAt?: string | null
   readTime?: number | null
-  views?: number | null
+  // views?: number | null // TODO: enable when view tracking is deployed
   heroImage?: MediaFile | null
   heroImageUrl?: string | null
   category?: { name: string; slug: string } | null
 }
 
-function formatViews(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
-  if (n >= 10_000)    return Math.round(n / 1000) + 'K'
-  if (n >= 1_000)     return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
-  return String(n)
-}
+// TODO: enable when view tracking is deployed
+// function formatViews(n: number): string {
+//   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+//   if (n >= 10_000) return Math.round(n / 1000) + 'K'
+//   if (n >= 1_000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+//   return String(n)
+// }
 
 // ── Story Card — 1:1 square image, used in Featured Stories 4-col grid ──────
 export function StoryCard({
@@ -80,7 +81,12 @@ export function StoryCard({
 
       <p className="byline-small">
         <span>{authorName}</span>
-        {publishedAt && <> · <span>{formatDateShort(publishedAt)}</span></>}
+        {publishedAt && (
+          <>
+            {' '}
+            · <span>{formatDateShort(publishedAt)}</span>
+          </>
+        )}
       </p>
     </article>
   )
@@ -130,20 +136,19 @@ export function LatestCard({
 
       <p className="byline-small">
         <span>{authorName}</span>
-        {publishedAt && <> · <span>{formatDateShort(publishedAt)}</span></>}
+        {publishedAt && (
+          <>
+            {' '}
+            · <span>{formatDateShort(publishedAt)}</span>
+          </>
+        )}
       </p>
     </article>
   )
 }
 
 // ── Rail Item — text-only, used in Coverage sidebar rail ────────────────────
-export function RailItem({
-  slug,
-  title,
-  dek,
-  publishedAt,
-  category,
-}: ArticleCardProps) {
+export function RailItem({ slug, title, dek, publishedAt, category }: ArticleCardProps) {
   logger.debug('Rendering RailItem', { slug })
 
   return (
@@ -207,7 +212,7 @@ export function FeedItem({
   authorAvatarUrl,
   publishedAt,
   readTime,
-  views,
+  // views, // TODO: enable when view tracking is deployed
   heroImage,
   heroImageUrl,
   category,
@@ -227,9 +232,7 @@ export function FeedItem({
             style={authorAvatarUrl ? { backgroundImage: `url(${authorAvatarUrl})` } : {}}
           />
           <span className="author-name">{authorName}</span>
-          {category && (
-            <span className="author-meta">&nbsp;in&nbsp;{category.name}</span>
-          )}
+          {category && <span className="author-meta">&nbsp;in&nbsp;{category.name}</span>}
         </div>
 
         <p className="feed-title">{title}</p>
@@ -244,12 +247,13 @@ export function FeedItem({
               <span className="read">{readTime} min read</span>
             </>
           )}
-          {views != null && (
+          {/* TODO: enable when view tracking is deployed */}
+          {/* {views != null && (
             <>
               <span className="dot" />
               <span className="read">{formatViews(views)} views</span>
             </>
-          )}
+          )} */}
         </div>
       </div>
 

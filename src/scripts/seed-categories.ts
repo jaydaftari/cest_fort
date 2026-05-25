@@ -3,10 +3,26 @@ import configPromise from '@payload-config'
 
 const CATEGORIES = [
   { name: 'Tech', slug: 'tech', description: 'Technology, software, and the digital frontier.' },
-  { name: 'Culture', slug: 'culture', description: 'Art, ideas, and the currents shaping contemporary life.' },
-  { name: 'Fashion', slug: 'fashion', description: 'Style, luxury, and the aesthetics of the moment.' },
-  { name: 'Show Business', slug: 'showbusiness', description: 'Film, music, entertainment, and the people who define it.' },
-  { name: 'Leaders Stories', slug: 'leaders-stories', description: 'Founder stories, executive insights, and leadership perspectives.' },
+  {
+    name: 'Culture',
+    slug: 'culture',
+    description: 'Art, ideas, and the currents shaping contemporary life.',
+  },
+  {
+    name: 'Fashion',
+    slug: 'fashion',
+    description: 'Style, luxury, and the aesthetics of the moment.',
+  },
+  {
+    name: 'Show Business',
+    slug: 'showbusiness',
+    description: 'Film, music, entertainment, and the people who define it.',
+  },
+  {
+    name: 'Leaders Stories',
+    slug: 'leaders-stories',
+    description: 'Founder stories, executive insights, and leadership perspectives.',
+  },
 ]
 
 async function seed() {

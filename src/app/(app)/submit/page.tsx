@@ -8,8 +8,9 @@ export const dynamic = 'force-dynamic'
 const logger = createLogger('Page:Submit')
 
 export const metadata: Metadata = {
-  title: 'Submit a Story — C\'est Fort',
-  description: "Share your perspective with C'est Fort's readership. All submissions are reviewed by our editorial team.",
+  title: "Submit a Story — C'est Fort",
+  description:
+    "Share your perspective with C'est Fort's readership. All submissions are reviewed by our editorial team.",
 }
 
 export default async function SubmitPage() {

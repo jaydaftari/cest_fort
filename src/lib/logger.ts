@@ -13,14 +13,13 @@ const getMinLevel = (): LogLevel => {
   return process.env.NODE_ENV === 'development' ? 'debug' : 'info'
 }
 
-const shouldLog = (level: LogLevel): boolean =>
-  LOG_LEVELS[level] >= LOG_LEVELS[getMinLevel()]
+const shouldLog = (level: LogLevel): boolean => LOG_LEVELS[level] >= LOG_LEVELS[getMinLevel()]
 
 const formatMessage = (
   level: LogLevel,
   module: string,
   message: string,
-  data?: unknown,
+  data?: unknown
 ): string => {
   const timestamp = new Date().toISOString()
 

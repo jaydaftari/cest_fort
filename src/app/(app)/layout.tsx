@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s — C'est Fort",
   },
   description:
-    "Curated insights on technology, culture, and refined living. The magazine for discerning readers.",
+    'Curated insights on technology, culture, and refined living. The magazine for discerning readers.',
   openGraph: {
     type: 'website',
     siteName: "C'est Fort",
@@ -42,13 +42,10 @@ type Props = {
 
 export default function AppLayout({ children }: Props) {
   return (
-    <html
-      lang="en"
-      className={`${cormorant.variable} ${inter.variable}`}
-    >
+    <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
       <body>
         <Header />
-        <main>{children}</main>
+        <main id="main-content">{children}</main>
         <Footer />
       </body>
     </html>

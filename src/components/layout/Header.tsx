@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('Header')
@@ -17,8 +17,10 @@ const NAV_LINKS = [
 
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Focus search input when overlay opens
@@ -31,7 +33,9 @@ export default function Header() {
   // Lock body scroll when drawer or search is open
   useEffect(() => {
     document.body.style.overflow = drawerOpen || searchOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [drawerOpen, searchOpen])
 
   const openDrawer = () => {
@@ -49,11 +53,22 @@ export default function Header() {
   const closeSearch = () => {
     logger.debug('Closing search overlay')
     setSearchOpen(false)
+    setSearchQuery('')
+  }
+
+  const handleSearchSubmit = () => {
+    const q = searchQuery.trim()
+    if (!q) return
+    closeSearch()
+    router.push(`/search?q=${encodeURIComponent(q)}`)
   }
 
   return (
     <>
       <header className="site-header" id="siteHeader">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <div className="header-row">
           <button className="icon-btn menu-btn" aria-label="Open menu" onClick={openDrawer}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -89,7 +104,9 @@ export default function Header() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={pathname === href || pathname.startsWith(`${href}/`) ? 'is-active' : ''}
+                  className={
+                    pathname === href || pathname.startsWith(`${href}/`) ? 'is-active' : ''
+                  }
                 >
                   {label}
                 </Link>
@@ -103,7 +120,9 @@ export default function Header() {
       <div
         className={`drawer${drawerOpen ? ' is-open' : ''}`}
         aria-hidden={!drawerOpen}
-        onClick={(e) => { if (e.target === e.currentTarget) closeDrawer() }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) closeDrawer()
+        }}
       >
         <div className="drawer-panel">
           <button className="icon-btn drawer-close" aria-label="Close menu" onClick={closeDrawer}>
@@ -117,15 +136,25 @@ export default function Header() {
           <ul className="drawer-nav">
             {NAV_LINKS.map(({ label, href }) => (
               <li key={href}>
-                <Link href={href} onClick={closeDrawer}>{label}</Link>
+                <Link href={href} onClick={closeDrawer}>
+                  {label}
+                </Link>
               </li>
             ))}
           </ul>
 
           <p className="drawer-eyebrow">THE MAGAZINE</p>
           <ul className="drawer-nav drawer-nav--small">
-            <li><Link href="/submit" onClick={closeDrawer}>Submit a Story</Link></li>
-            <li><Link href="/about" onClick={closeDrawer}>About</Link></li>
+            <li>
+              <Link href="/submit" onClick={closeDrawer}>
+                Submit a Story
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" onClick={closeDrawer}>
+                About
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
@@ -134,7 +163,9 @@ export default function Header() {
       <div
         className={`search-overlay${searchOpen ? ' is-open' : ''}`}
         aria-hidden={!searchOpen}
-        onClick={(e) => { if (e.target === e.currentTarget) closeSearch() }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) closeSearch()
+        }}
       >
         <button className="icon-btn search-close" aria-label="Close search" onClick={closeSearch}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
@@ -154,14 +185,27 @@ export default function Header() {
               type="text"
               placeholder="Stories, contributors, topics…"
               autoComplete="off"
-              onKeyDown={(e) => { if (e.key === 'Escape') closeSearch() }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') closeSearch()
+                if (e.key === 'Enter') handleSearchSubmit()
+              }}
             />
           </div>
           <p className="search-hint">
             Try{' '}
-            <Link href="/tech" onClick={closeSearch}>tech</Link>,{' '}
-            <Link href="/culture" onClick={closeSearch}>culture</Link>, or{' '}
-            <Link href="/leaders" onClick={closeSearch}>leaders stories</Link>
+            <Link href="/tech" onClick={closeSearch}>
+              tech
+            </Link>
+            ,{' '}
+            <Link href="/culture" onClick={closeSearch}>
+              culture
+            </Link>
+            , or{' '}
+            <Link href="/leaders" onClick={closeSearch}>
+              leaders stories
+            </Link>
           </p>
         </div>
       </div>

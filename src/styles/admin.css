@@ -10,67 +10,70 @@
    ───────────────────────────────────────────────────────────── */
 :root {
   /* Warm ivory → deep ink */
-  --color-base-0:    255, 253, 248;
-  --color-base-50:   251, 248, 242;
-  --color-base-100:  244, 240, 232;
-  --color-base-150:  234, 229, 219;
-  --color-base-200:  220, 214, 202;
-  --color-base-250:  202, 196, 183;
-  --color-base-300:  182, 175, 162;
-  --color-base-350:  158, 151, 138;
-  --color-base-400:  132, 126, 114;
-  --color-base-450:  108, 102,  92;
-  --color-base-500:   86,  81,  72;
-  --color-base-550:   70,  65,  58;
-  --color-base-600:   54,  50,  44;
-  --color-base-650:   40,  37,  32;
-  --color-base-700:   29,  27,  23;
-  --color-base-750:   20,  18,  15;
-  --color-base-800:   13,  12,  10;
-  --color-base-850:    9,   8,   7;
-  --color-base-900:    5,   4,   4;
-  --color-base-950:    2,   2,   1;
-  --color-base-1000:   0,   0,   0;
+  --color-base-0: 255, 253, 248;
+  --color-base-50: 251, 248, 242;
+  --color-base-100: 244, 240, 232;
+  --color-base-150: 234, 229, 219;
+  --color-base-200: 220, 214, 202;
+  --color-base-250: 202, 196, 183;
+  --color-base-300: 182, 175, 162;
+  --color-base-350: 158, 151, 138;
+  --color-base-400: 132, 126, 114;
+  --color-base-450: 108, 102, 92;
+  --color-base-500: 86, 81, 72;
+  --color-base-550: 70, 65, 58;
+  --color-base-600: 54, 50, 44;
+  --color-base-650: 40, 37, 32;
+  --color-base-700: 29, 27, 23;
+  --color-base-750: 20, 18, 15;
+  --color-base-800: 13, 12, 10;
+  --color-base-850: 9, 8, 7;
+  --color-base-900: 5, 4, 4;
+  --color-base-950: 2, 2, 1;
+  --color-base-1000: 0, 0, 0;
 
   /* Gold success */
-  --color-success-50:  255, 250, 238;
+  --color-success-50: 255, 250, 238;
   --color-success-100: 252, 243, 214;
   --color-success-300: 230, 200, 120;
-  --color-success-500: 192, 144,  48;
-  --color-success-600: 168, 120,  32;
-  --color-success-700: 136,  96,  20;
-  --color-success-800:  84,  58,   8;
-  --color-success-900:  32,  22,   2;
+  --color-success-500: 192, 144, 48;
+  --color-success-600: 168, 120, 32;
+  --color-success-700: 136, 96, 20;
+  --color-success-800: 84, 58, 8;
+  --color-success-900: 32, 22, 2;
 
   /* Error crimson */
   --color-error-500: 180, 28, 28;
 
   /* Custom tokens */
-  --cf-ink:          #0d0b09;
-  --cf-ink-mid:      #1e1b17;
-  --cf-paper:        #fffdf8;
-  --cf-cream:        #f7f4ee;
-  --cf-warm:         #ede9e1;
-  --cf-border:       #ddd8ce;
+  --cf-ink: #0d0b09;
+  --cf-ink-mid: #1e1b17;
+  --cf-paper: #fffdf8;
+  --cf-cream: #f7f4ee;
+  --cf-warm: #ede9e1;
+  --cf-border: #ddd8ce;
   --cf-border-faint: #eae6de;
-  --cf-muted:        #8c8778;
-  --cf-gold:         #b8902e;
-  --cf-gold-light:   #d4aa50;
+  --cf-muted: #8c8778;
+  --cf-gold: #b8902e;
+  --cf-gold-light: #d4aa50;
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-ui:      'Syne', system-ui, sans-serif;
-  --font-mono:    'DM Mono', monospace;
+  --font-ui: 'Syne', system-ui, sans-serif;
+  --font-mono: 'DM Mono', monospace;
 }
 
 /* ─────────────────────────────────────────────────────────────
    GLOBAL
    ───────────────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
 }
 
-body, #app {
+body,
+#app {
   font-family: var(--font-ui) !important;
   background: var(--cf-cream) !important;
 }
@@ -81,8 +84,18 @@ body, #app {
 .nav,
 .nav__wrap {
   background: var(--cf-ink) !important;
-  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   font-family: var(--font-ui) !important;
+}
+
+/* Logo area top accent */
+.nav__wrap::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cf-gold), #d4aa50 40%, transparent);
+  position: sticky;
+  top: 0;
 }
 
 /* Group labels */
@@ -93,7 +106,7 @@ body, #app {
   font-weight: 700 !important;
   letter-spacing: 0.26em !important;
   text-transform: uppercase !important;
-  color: rgba(255,255,255,0.22) !important;
+  color: rgba(255, 255, 255, 0.22) !important;
   padding: 20px 24px 6px !important;
 }
 
@@ -104,8 +117,10 @@ body, #app {
   font-size: 12.5px !important;
   font-weight: 500 !important;
   letter-spacing: 0.04em !important;
-  color: rgba(255,255,255,0.6) !important;
-  transition: color 0.15s, background 0.15s !important;
+  color: rgba(255, 255, 255, 0.58) !important;
+  transition:
+    color 0.15s,
+    background 0.15s !important;
   border-left: 2px solid transparent !important;
 }
 .nav__link a {
@@ -114,15 +129,43 @@ body, #app {
   text-decoration: none !important;
 }
 .nav__link a:hover {
-  color: rgba(255,255,255,0.9) !important;
-  background: rgba(255,255,255,0.06) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 .nav__link--active > a,
-.nav__link a[aria-current="page"],
+.nav__link a[aria-current='page'],
 .nav__link a.active {
   color: #fff !important;
-  background: rgba(255,255,255,0.08) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   border-left-color: var(--cf-gold) !important;
+}
+
+/* Sidebar logo brand treatment */
+.nav__logo-wrap {
+  padding: 20px 24px 18px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-bottom: 8px !important;
+}
+
+/* New article CTA at bottom of nav */
+.nav__create-btn {
+  margin: 8px 16px 20px !important;
+  display: block !important;
+  padding: 10px 16px !important;
+  background: var(--cf-gold) !important;
+  color: var(--cf-ink) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  border-radius: 2px !important;
+  transition: background 0.15s !important;
+}
+.nav__create-btn:hover {
+  background: #d4aa50 !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -147,7 +190,9 @@ body, #app {
   color: var(--cf-muted) !important;
   text-decoration: none !important;
 }
-.step-nav a:hover { color: var(--cf-ink) !important; }
+.step-nav a:hover {
+  color: var(--cf-ink) !important;
+}
 
 /* ─────────────────────────────────────────────────────────────
    MAIN CONTENT SHELL — .template-default
@@ -190,8 +235,12 @@ body, #app {
   vertical-align: middle !important;
   font-family: var(--font-ui) !important;
 }
-.table tbody tr:last-child td { border-bottom: none !important; }
-.table tbody tr:hover td { background: var(--cf-cream) !important; }
+.table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.table tbody tr:hover td {
+  background: var(--cf-cream) !important;
+}
 
 /* Cell links */
 .cell-link,
@@ -202,7 +251,9 @@ body, #app {
   text-decoration: none !important;
   font-family: var(--font-ui) !important;
 }
-.table a:hover { color: var(--cf-gold) !important; }
+.table a:hover {
+  color: var(--cf-gold) !important;
+}
 
 /* ─────────────────────────────────────────────────────────────
    FORM FIELDS — .field-label, .field-type
@@ -217,11 +268,11 @@ label.field-label {
   color: var(--cf-muted) !important;
 }
 
-.field-type input[type="text"],
-.field-type input[type="email"],
-.field-type input[type="url"],
-.field-type input[type="password"],
-.field-type input[type="number"],
+.field-type input[type='text'],
+.field-type input[type='email'],
+.field-type input[type='url'],
+.field-type input[type='password'],
+.field-type input[type='number'],
 .field-type textarea,
 .field-type select {
   background: var(--cf-cream) !important;
@@ -231,12 +282,14 @@ label.field-label {
   font-size: 13.5px !important;
   color: var(--cf-ink) !important;
   padding: 10px 14px !important;
-  transition: border-color 0.2s, box-shadow 0.2s !important;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s !important;
 }
 .field-type input:focus,
 .field-type textarea:focus {
   border-color: var(--cf-ink) !important;
-  box-shadow: 0 0 0 3px rgba(13,11,9,0.05) !important;
+  box-shadow: 0 0 0 3px rgba(13, 11, 9, 0.05) !important;
   outline: none !important;
   background: var(--cf-paper) !important;
 }
@@ -258,7 +311,10 @@ label.field-label {
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
   border-radius: 2px !important;
-  transition: background 0.15s, color 0.15s, border-color 0.15s !important;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s !important;
 }
 
 .btn--style-primary {
@@ -300,19 +356,19 @@ label.field-label {
 }
 
 .pill--style-success {
-  background: rgba(184,144,46,0.1) !important;
+  background: rgba(184, 144, 46, 0.1) !important;
   color: #7a5c14 !important;
-  border: 1px solid rgba(184,144,46,0.25) !important;
+  border: 1px solid rgba(184, 144, 46, 0.25) !important;
 }
 .pill--style-light {
-  background: rgba(13,11,9,0.05) !important;
+  background: rgba(13, 11, 9, 0.05) !important;
   color: var(--cf-muted) !important;
   border: 1px solid var(--cf-border-faint) !important;
 }
 .pill--style-error {
-  background: rgba(180,28,28,0.07) !important;
+  background: rgba(180, 28, 28, 0.07) !important;
   color: #b41c1c !important;
-  border: 1px solid rgba(180,28,28,0.18) !important;
+  border: 1px solid rgba(180, 28, 28, 0.18) !important;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -343,13 +399,13 @@ label.field-label {
 }
 .rs__control--is-focused {
   border-color: var(--cf-ink) !important;
-  box-shadow: 0 0 0 3px rgba(13,11,9,0.05) !important;
+  box-shadow: 0 0 0 3px rgba(13, 11, 9, 0.05) !important;
 }
 .rs__menu {
   background: var(--cf-paper) !important;
   border: 1px solid var(--cf-border) !important;
   border-radius: 4px !important;
-  box-shadow: 0 12px 40px rgba(13,11,9,0.14) !important;
+  box-shadow: 0 12px 40px rgba(13, 11, 9, 0.14) !important;
   font-family: var(--font-ui) !important;
 }
 .rs__option {
@@ -357,8 +413,13 @@ label.field-label {
   font-family: var(--font-ui) !important;
   color: var(--cf-ink) !important;
 }
-.rs__option--is-focused { background: var(--cf-cream) !important; }
-.rs__option--is-selected { background: var(--cf-ink) !important; color: var(--cf-paper) !important; }
+.rs__option--is-focused {
+  background: var(--cf-cream) !important;
+}
+.rs__option--is-selected {
+  background: var(--cf-ink) !important;
+  color: var(--cf-paper) !important;
+}
 
 /* ─────────────────────────────────────────────────────────────
    HEADINGS in content area
@@ -376,10 +437,20 @@ label.field-label {
 /* ─────────────────────────────────────────────────────────────
    SCROLLBAR
    ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--cf-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #bdb8ae; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cf-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #bdb8ae;
+}
 
 /* ─────────────────────────────────────────────────────────────
    FOCUS RING
@@ -392,7 +463,8 @@ label.field-label {
 /* ─────────────────────────────────────────────────────────────
    CODE / MONO
    ───────────────────────────────────────────────────────────── */
-code, pre {
+code,
+pre {
   font-family: var(--font-mono) !important;
   font-size: 12.5px !important;
   background: var(--cf-warm) !important;
@@ -401,4 +473,150 @@ code, pre {
 }
 
 /* Misc dividers */
-hr { border-color: var(--cf-border-faint) !important; }
+hr {
+  border-color: var(--cf-border-faint) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DASHBOARD — hover states (replaces inline JS mouse handlers)
+   ───────────────────────────────────────────────────────────── */
+.dash-action-card {
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.dash-action-card:hover {
+  border-color: #0d0b09 !important;
+  box-shadow: 0 4px 20px rgba(13, 11, 9, 0.08) !important;
+}
+
+.dash-article-row {
+  transition: background 0.12s;
+}
+.dash-article-row:hover {
+  background: #faf7f2 !important;
+}
+
+.dash-quick-link {
+  transition: background 0.12s;
+}
+.dash-quick-link:hover {
+  background: #faf7f2 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DASHBOARD — stat cards + action grid responsive collapse
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  /* stat strip → 2-col on medium screens */
+  .cf-dash-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .cf-dash-actions {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .cf-dash-bottom {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   COLLECTION LIST — filter bar refinements
+   ───────────────────────────────────────────────────────────── */
+.list-controls,
+.list-controls__wrap {
+  background: var(--cf-cream) !important;
+  border-bottom: 1px solid var(--cf-border-faint) !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* Search in list view */
+.search-filter input,
+.list-controls input[type='search'],
+.list-controls input[type='text'] {
+  background: var(--cf-paper) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-ui) !important;
+  font-size: 12.5px !important;
+  color: var(--cf-ink) !important;
+}
+
+/* Pagination */
+.pagination__page,
+.pagination__arrow {
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--cf-ink) !important;
+  border-radius: 2px !important;
+}
+.pagination__page--active {
+  background: var(--cf-ink) !important;
+  color: var(--cf-paper) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   DOCUMENT / EDIT VIEW — two-column editorial layout feel
+   ───────────────────────────────────────────────────────────── */
+.document-fields {
+  font-family: var(--font-ui) !important;
+}
+
+/* Rich text editor container */
+.rich-text,
+.rich-text--lexical {
+  font-family: var(--font-display) !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  color: var(--cf-ink) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-radius: 2px !important;
+  background: var(--cf-paper) !important;
+  padding: 20px 24px !important;
+}
+
+/* Lexical editor toolbar */
+.toolbar,
+.rich-text__toolbar {
+  background: var(--cf-cream) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-bottom: none !important;
+  border-radius: 2px 2px 0 0 !important;
+  font-family: var(--font-ui) !important;
+}
+
+/* Chip/tag fields */
+.tags-input__tag,
+.array-field__row-handle {
+  background: var(--cf-warm) !important;
+  border: 1px solid var(--cf-border) !important;
+  border-radius: 2px !important;
+  font-family: var(--font-ui) !important;
+  font-size: 11px !important;
+  color: var(--cf-ink) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   LOGIN PAGE
+   ───────────────────────────────────────────────────────────── */
+.login__wrap,
+.login-form__wrap {
+  background: var(--cf-cream) !important;
+}
+
+.login__form {
+  background: var(--cf-paper) !important;
+  border: 1px solid var(--cf-border-faint) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 24px 80px rgba(13, 11, 9, 0.1) !important;
+}
+
+/* Login page heading */
+.login__form h1,
+.login__heading {
+  font-family: var(--font-display) !important;
+  font-weight: 300 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--cf-ink) !important;
+}

@@ -5,95 +5,81 @@ import { FeedItem } from '@/components/ui/ArticleCard'
 import { createLogger } from '@/lib/logger'
 import { getMockByCategory } from '@/mock-data/articles'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 const logger = createLogger('Page:Leaders')
 
 export const metadata: Metadata = {
   title: 'Leaders Stories',
-  description: "Founder stories, executive insights, and leadership perspectives from the people shaping tomorrow.",
+  description:
+    'Founder stories, executive insights, and leadership perspectives from the people shaping tomorrow.',
 }
 
-const TABS = [
-  { key: 'featured', label: 'Featured' },
-  { key: 'latest', label: 'Latest' },
-] as const
+const TOPICS = [
+  'Tech',
+  'Culture',
+  'Fashion',
+  'Leadership',
+  'Startups',
+  'Sustainability',
+  'AI',
+  'Design',
+]
 
-type Tab = typeof TABS[number]['key']
-
-type PageProps = {
-  searchParams: Promise<{ tab?: string }>
-}
-
-const TOPICS = ['Tech', 'Culture', 'Fashion', 'Leadership', 'Startups', 'Sustainability', 'AI', 'Design']
-
-export default async function LeadersPage({ searchParams }: PageProps) {
-  const { tab = 'featured' } = await searchParams
-  const activeTab = (TABS.some((t) => t.key === tab) ? tab : 'featured') as Tab
-
-  logger.info('Rendering Leaders page', { activeTab })
+export default async function LeadersPage() {
+  logger.info('Rendering Leaders page')
 
   const payload = await getPayloadClient()
 
-  // Find the leaders-stories category
-  const categoryResult = await payload.find({
-    collection: 'categories',
-    where: { slug: { equals: 'leaders-stories' } },
-    limit: 1,
+  const PIN_IDS = ['leaders.pin-1', 'leaders.pin-2', 'leaders.pin-3'] as const
+
+  const pinResults = await Promise.all(
+    PIN_IDS.map((slotId) =>
+      payload.find({
+        collection: 'articles',
+        where: { and: [{ placement: { equals: slotId } }, { _status: { equals: 'published' } }] },
+        limit: 1,
+        depth: 2,
+      })
+    )
+  )
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pinnedDocs: (any | null)[] = pinResults.map((r) => r.docs[0] ?? null)
+  const hasRealPins = pinnedDocs.some(Boolean)
+
+  // Mock fallback for pinned section when no articles are placed yet
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockDocs = hasRealPins ? [] : (getMockByCategory('leaders-stories') as unknown as any[])
+  const displayPinned = hasRealPins ? pinnedDocs.filter(Boolean) : mockDocs.slice(0, 3)
+
+  logger.info('Leaders page data fetched', { pinned: displayPinned.length })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toFeedItemProps = (article: any) => ({
+    id: article.id,
+    slug: article.slug as string,
+    title: article.title as string,
+    dek: article.dek as string | null,
+    authorName: article.authorName as string,
+    authorAvatarUrl: article.authorAvatarUrl as string | null,
+    publishedAt: article.publishedAt as string | null,
+    readTime: article.readTime as number | null,
+    // views: (article as { views?: number }).views ?? null, // TODO: enable when view tracking is deployed
+    heroImage: article.heroImage as {
+      url?: string
+      sizes?: { thumbnail?: { url?: string } }
+    } | null,
+    heroImageUrl: article.heroImageUrl as string | null,
+    category: article.category as { name: string; slug: string } | null,
   })
-
-  const leadersCategory = categoryResult.docs[0] ?? null
-  logger.debug('Leaders category lookup', { found: Boolean(leadersCategory) })
-
-  // Fetch articles: featured = featured flag, latest = most recent
-  const articlesResult = await payload.find({
-    collection: 'articles',
-    where: {
-      and: [
-        { _status: { equals: 'published' } },
-        ...(leadersCategory
-          ? [{ category: { equals: leadersCategory.id } }]
-          : []),
-        ...(activeTab === 'featured' ? [{ featured: { equals: true } }] : []),
-      ],
-    },
-    limit: 20,
-    sort: '-publishedAt',
-    depth: 2,
-  })
-
-  // Fallback: if featured tab has no results, show latest from DB
-  // If DB has nothing at all, fall back to mock data
-  type Doc = typeof articlesResult.docs[number]
-  let articles: Doc[]
-  if (articlesResult.docs.length > 0) {
-    articles = articlesResult.docs
-  } else if (activeTab === 'featured') {
-    const latestResult = await payload.find({
-      collection: 'articles',
-      where: {
-        and: [
-          { _status: { equals: 'published' } },
-          ...(leadersCategory ? [{ category: { equals: leadersCategory.id } }] : []),
-        ],
-      },
-      limit: 20,
-      sort: '-publishedAt',
-      depth: 2,
-    })
-    articles = latestResult.docs.length > 0
-      ? latestResult.docs
-      : (getMockByCategory('leaders-stories') as unknown as Doc[])
-  } else {
-    articles = getMockByCategory('leaders-stories') as unknown as Doc[]
-  }
-
-  logger.info('Leaders page data fetched', { articleCount: articles.length, activeTab })
 
   return (
     <>
       <div className="cat-header">
-        <Link className="cat-back" href="/">← HOME</Link>
+        <Link className="cat-back" href="/">
+          ← HOME
+        </Link>
         <div className="leaders-headrow">
           <h1 className="cat-title">LEADERS STORIES</h1>
           <Link className="btn-write" href="/submit">
@@ -104,60 +90,76 @@ export default async function LeadersPage({ searchParams }: PageProps) {
           </Link>
         </div>
         <p className="leaders-intro">
-          Founder stories, executive insights, and leadership perspectives from the people shaping tomorrow.
-          Submit your story and reach the most discerning readership.
+          Founder stories, executive insights, and leadership perspectives from the people shaping
+          tomorrow. Submit your story and reach the most discerning readership.
         </p>
       </div>
 
       <div className="feed-layout">
         {/* ── Main feed ─────────────────────────────────────── */}
         <div className="feed-main">
-          {/* Tabs */}
-          <div className="feed-tabs">
-            {TABS.map(({ key, label }) => (
-              <Link
-                key={key}
-                href={`/leaders?tab=${key}`}
-                className={`feed-tab${activeTab === key ? ' is-active' : ''}`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-          <hr className="feed-rule" />
-
-          {/* Article list */}
-          {articles.length > 0 ? (
-            <div className="feed-list">
-              {articles.map((article) => {
-                const media = article.heroImage as { url?: string; sizes?: { thumbnail?: { url?: string } } } | null
-                return (
-                  <FeedItem
-                    key={String(article.id)}
-                    id={article.id}
-                    slug={article.slug as string}
-                    title={article.title as string}
-                    dek={article.dek as string | null}
-                    authorName={article.authorName as string}
-                    authorAvatarUrl={article.authorAvatarUrl as string | null}
-                    publishedAt={article.publishedAt as string | null}
-                    readTime={article.readTime as number | null}
-                    views={(article as { views?: number }).views ?? null}
-                    heroImage={media}
-                    heroImageUrl={article.heroImageUrl as string | null}
-                    category={article.category as { name: string; slug: string } | null}
-                  />
-                )
-              })}
+          {/* 3 editorially-pinned stories */}
+          {displayPinned.length > 0 ? (
+            <div style={{ marginBottom: 48 }}>
+              <p className="eyebrow" style={{ marginBottom: 16 }}>
+                FEATURED
+              </p>
+              <hr className="feed-rule" />
+              <div className="feed-list">
+                {displayPinned.map((article) => (
+                  <FeedItem key={String(article.id)} {...toFeedItemProps(article)} />
+                ))}
+              </div>
             </div>
           ) : (
-            <div className="feed-empty">
-              No stories yet.{' '}
-              <Link href="/submit" style={{ borderBottom: '1px solid var(--line)' }}>
-                Be the first to submit.
-              </Link>
+            <div className="feed-empty" style={{ marginBottom: 48 }}>
+              No featured stories yet. Assign articles to Pinned Story slots from the editorial
+              panel.
             </div>
           )}
+
+          {/* More Leader Stories button */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              paddingTop: 8,
+            }}
+          >
+            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)' }} />
+            <Link
+              href="/leaders/more"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '13px 28px',
+                background: '#1a1c1c',
+                color: '#fff',
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                borderRadius: 2,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              MORE LEADER STORIES
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                style={{ width: 13, height: 13 }}
+              >
+                <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+            <hr style={{ flex: 1, border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)' }} />
+          </div>
         </div>
 
         {/* ── Sidebar ───────────────────────────────────────── */}
@@ -166,25 +168,11 @@ export default async function LeadersPage({ searchParams }: PageProps) {
             <p className="aside-heading">TOPICS</p>
             <div className="topic-chips">
               {TOPICS.map((topic) => (
-                <span key={topic} className="chip">{topic}</span>
+                <span key={topic} className="chip">
+                  {topic}
+                </span>
               ))}
             </div>
-          </div>
-
-          <hr className="aside-rule" />
-
-          <div className="aside-block">
-            <p className="aside-heading">SUBMIT YOUR STORY</p>
-            <p className="aside-note">
-              Share your perspective with C&apos;est Fort&apos;s readership.
-              All submissions are reviewed by our editorial team.
-            </p>
-          </div>
-
-          <div style={{ marginTop: 20 }}>
-            <Link className="btn-ghost" href="/submit" style={{ display: 'inline-block' }}>
-              SUBMIT NOW
-            </Link>
           </div>
         </aside>
       </div>

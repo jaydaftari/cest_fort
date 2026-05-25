@@ -2,13 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getPayloadClient } from '@/lib/payload'
-import { formatDate, formatDateShort, truncate } from '@/lib/utils'
+import { formatDate, formatDateShort, truncate, getArticleImageUrl } from '@/lib/utils'
 import { StoryCard, LatestCard, RailItem } from '@/components/ui/ArticleCard'
 import { NewsletterForm } from '@/components/ui/NewsletterForm'
 import { MOCK_ARTICLES } from '@/mock-data/articles'
 import { createLogger } from '@/lib/logger'
+import JsonLd from '@/components/seo/JsonLd'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 30
 
 const logger = createLogger('Page:Home')
 
@@ -16,94 +17,222 @@ export const metadata: Metadata = {
   title: "C'est Fort — Tech, Culture & The New Luxury",
 }
 
+async function fetchByPlacement(
+  payload: Awaited<ReturnType<typeof getPayloadClient>>,
+  slotId: string
+) {
+  const result = await payload.find({
+    collection: 'articles',
+    where: { and: [{ placement: { equals: slotId } }, { _status: { equals: 'published' } }] },
+    limit: 1,
+    depth: 2,
+  })
+  return result.docs[0] ?? null
+}
+
 export default async function HomePage() {
   logger.info('Rendering homepage')
 
   const payload = await getPayloadClient()
 
-  // Fetch hero (featured) article
-  const heroResult = await payload.find({
-    collection: 'articles',
-    where: { and: [{ featured: { equals: true } }, { _status: { equals: 'published' } }] },
-    limit: 1,
-    sort: '-publishedAt',
-    depth: 2,
-  })
+  // Fetch placed articles + sponsor band global in parallel
+  const [
+    hero,
+    leadStory,
+    editorsPick,
+    feat1,
+    feat2,
+    feat3,
+    feat4,
+    rail1,
+    rail2,
+    rail3,
+    latest1,
+    latest2,
+    latest3,
+    latest4,
+    sponsorBandRaw,
+  ] = await Promise.all([
+    fetchByPlacement(payload, 'homepage.hero'),
+    fetchByPlacement(payload, 'homepage.lead'),
+    fetchByPlacement(payload, 'homepage.editors-pick'),
+    fetchByPlacement(payload, 'homepage.featured-1'),
+    fetchByPlacement(payload, 'homepage.featured-2'),
+    fetchByPlacement(payload, 'homepage.featured-3'),
+    fetchByPlacement(payload, 'homepage.featured-4'),
+    fetchByPlacement(payload, 'homepage.rail-1'),
+    fetchByPlacement(payload, 'homepage.rail-2'),
+    fetchByPlacement(payload, 'homepage.rail-3'),
+    fetchByPlacement(payload, 'homepage.latest-1'),
+    fetchByPlacement(payload, 'homepage.latest-2'),
+    fetchByPlacement(payload, 'homepage.latest-3'),
+    fetchByPlacement(payload, 'homepage.latest-4'),
+    payload.findGlobal({ slug: 'sponsor-band' }).catch(() => null),
+  ])
 
-  // Fetch lead story for coverage section + 3 rail items
-  const coverageResult = await payload.find({
-    collection: 'articles',
-    where: { _status: { equals: 'published' } },
-    limit: 4,
-    sort: '-publishedAt',
-    depth: 2,
-  })
+  const sponsor = sponsorBandRaw as {
+    enabled?: boolean
+    image?: { url?: string; sizes?: { hero?: { url?: string } } } | null
+    imageUrl?: string | null
+    eyebrow?: string | null
+    brand?: string | null
+    tagline?: string | null
+    linkUrl?: string | null
+    linkLabel?: string | null
+  } | null
 
-  // Fetch featured stories grid (next 4)
-  const featuredResult = await payload.find({
-    collection: 'articles',
-    where: { _status: { equals: 'published' } },
-    limit: 4,
-    sort: '-publishedAt',
-    depth: 2,
-    page: 2,
-  })
+  const sponsorImageUrl =
+    sponsor?.image?.sizes?.hero?.url ?? sponsor?.image?.url ?? sponsor?.imageUrl ?? null
 
-  // Fetch latest articles (5-col grid)
+  // Merge with hardcoded mock — shown until an editor overrides via Sponsor Band settings
+  const effectiveSponsor = {
+    enabled: sponsor?.enabled ?? true,
+    brand: sponsor?.brand ?? 'MAISON VERMEIL',
+    eyebrow: sponsor?.eyebrow ?? 'PRESENTED BY',
+    tagline: sponsor?.tagline ?? 'The art of fragrance, reimagined for the modern connoisseur',
+    linkUrl: sponsor?.linkUrl ?? '#',
+    linkLabel: sponsor?.linkLabel ?? 'EXPLORE',
+  }
+
+  // Fetch latest articles for the grid (exclude placed ones)
+  const placedIds = [
+    hero?.id,
+    leadStory?.id,
+    editorsPick?.id,
+    feat1?.id,
+    feat2?.id,
+    feat3?.id,
+    feat4?.id,
+    rail1?.id,
+    rail2?.id,
+    rail3?.id,
+    latest1?.id,
+    latest2?.id,
+    latest3?.id,
+    latest4?.id,
+  ]
+    .filter(Boolean)
+    .map(String)
+
   const latestResult = await payload.find({
     collection: 'articles',
     where: { _status: { equals: 'published' } },
-    limit: 4,
+    limit: 12,
     sort: '-publishedAt',
     depth: 2,
   })
 
-  // Fall back to mock data when the DB has no published articles yet
-  const hasRealArticles = coverageResult.docs.length > 0 || heroResult.docs.length > 0
-  type Doc = typeof coverageResult.docs[number]
+  // Fall back to mock data when DB has no published articles yet
+  const hasRealArticles = latestResult.docs.length > 0 || !!hero
+  type Doc = (typeof latestResult.docs)[number]
   const mockDocs = hasRealArticles ? [] : (MOCK_ARTICLES as unknown as Doc[])
 
-  const hero = heroResult.docs[0] ?? coverageResult.docs[0] ?? mockDocs[0] ?? null
-
-  // Exclude hero from coverage so it isn't shown twice
-  const coverageDocs = hasRealArticles
-    ? coverageResult.docs.filter((doc) => String(doc.id) !== String(hero?.id))
+  // Filter out placed articles from the latest grid to avoid duplicates
+  const latestDocs = hasRealArticles
+    ? latestResult.docs.filter((doc) => !placedIds.includes(String(doc.id)))
     : mockDocs.slice(1)
 
-  const [leadStory, ...railItems] = coverageDocs
-  const featuredStories = hasRealArticles ? featuredResult.docs : mockDocs.slice(4, 8)
-  const latestArticles = hasRealArticles ? latestResult.docs : mockDocs.slice(0, 4)
+  const heroDoc = hero ?? mockDocs[0] ?? null
+  const leadDoc = leadStory ?? mockDocs[1] ?? null
+  const pickDoc = editorsPick ?? mockDocs[2] ?? null
+  // Rail items beside Lead Story — use placed slots, fill gaps from latest
+  const placedRail = [rail1, rail2, rail3]
+  const hasAnyRailPlacement = placedRail.some(Boolean)
+  const railFallback = latestDocs.filter(
+    (doc) => ![rail1?.id, rail2?.id, rail3?.id].filter(Boolean).map(String).includes(String(doc.id))
+  )
+  const railItems = hasRealArticles
+    ? (() => {
+        if (!hasAnyRailPlacement) return latestDocs.slice(1, 4)
+        const result: Doc[] = []
+        let fi = 0
+        for (const placed of placedRail) {
+          if (placed) result.push(placed as Doc)
+          else if (fi < railFallback.length) result.push(railFallback[fi++])
+        }
+        return result
+      })()
+    : mockDocs.slice(1, 4)
+
+  // Featured Stories: use editorially-placed slots, fill any empty slots from latest articles
+  const placedFeatured = [feat1, feat2, feat3, feat4]
+  const hasAnyFeaturedPlacement = placedFeatured.some(Boolean)
+  const featuredFallback = latestResult.docs.filter((doc) => !placedIds.includes(String(doc.id)))
+  const featuredStories = hasRealArticles
+    ? (() => {
+        const result: Doc[] = []
+        let fallbackIdx = 0
+        for (const placed of placedFeatured) {
+          if (placed) {
+            result.push(placed as Doc)
+          } else if (fallbackIdx < featuredFallback.length) {
+            result.push(featuredFallback[fallbackIdx++])
+          }
+        }
+        // If no placements at all, just use the first 4 latest
+        return hasAnyFeaturedPlacement ? result : latestResult.docs.slice(0, 4)
+      })()
+    : mockDocs.slice(4, 8)
+
+  // Latest Articles row — use placed slots, fill gaps from most-recent unplaced articles
+  const placedLatest = [latest1, latest2, latest3, latest4]
+  const hasAnyLatestPlacement = placedLatest.some(Boolean)
+  const latestArticles = hasRealArticles
+    ? (() => {
+        if (!hasAnyLatestPlacement) return latestDocs.slice(0, 4)
+        const latestFallback = latestDocs.filter(
+          (doc) =>
+            ![latest1?.id, latest2?.id, latest3?.id, latest4?.id]
+              .filter(Boolean)
+              .map(String)
+              .includes(String(doc.id))
+        )
+        const result: Doc[] = []
+        let fi = 0
+        for (const placed of placedLatest) {
+          if (placed) result.push(placed as Doc)
+          else if (fi < latestFallback.length) result.push(latestFallback[fi++])
+        }
+        return result
+      })()
+    : mockDocs.slice(0, 4)
 
   logger.info('Homepage data fetched', {
     heroId: hero?.id,
-    coverageCount: coverageResult.totalDocs,
-    featuredCount: featuredResult.totalDocs,
+    latestCount: latestResult.totalDocs,
   })
 
-  // Helpers to safely pull media URL from Payload upload or external URL
-  const getImageUrl = (article: typeof hero) => {
-    if (!article) return null
-    const media = article.heroImage as { url?: string; sizes?: { card?: { url?: string }; hero?: { url?: string } } } | null
-    return media?.sizes?.hero?.url ?? media?.sizes?.card?.url ?? media?.url ?? (article.heroImageUrl as string | null)
-  }
+  const getImageUrl = (article: typeof hero) =>
+    article ? getArticleImageUrl(article, ['hero', 'card']) : null
 
   const getCategory = (article: typeof hero) => {
     if (!article) return null
     return article.category as { name: string; slug: string } | null
   }
 
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: "C'est Fort",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://cestfort.com',
+    description: 'Tech, Culture & The New Luxury',
+  }
+
   return (
     <>
+      <JsonLd data={organizationSchema} />
       {/* ── Hero ────────────────────────────────────────────── */}
-      {hero ? (
+      {heroDoc ? (
         <section className="hero">
           <article className="hero-grid">
-            <Link className="hero-media" href={`/articles/${hero.slug as string}`}>
-              <span className="cat-pill">{(getCategory(hero)?.name ?? 'ARTICLE').toUpperCase()}</span>
-              {getImageUrl(hero) && (
+            <Link className="hero-media" href={`/articles/${heroDoc.slug as string}`}>
+              <span className="cat-pill">
+                {(getCategory(heroDoc)?.name ?? 'ARTICLE').toUpperCase()}
+              </span>
+              {getImageUrl(heroDoc) && (
                 <Image
-                  src={getImageUrl(hero) as string}
-                  alt={hero.title as string}
+                  src={getImageUrl(heroDoc) as string}
+                  alt={heroDoc.title as string}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   style={{ objectFit: 'cover' }}
@@ -113,29 +242,29 @@ export default async function HomePage() {
             </Link>
 
             <div className="hero-text">
-              <p className="eyebrow">{(getCategory(hero)?.name ?? '').toUpperCase()}</p>
-              <h1 className="display">{hero.title as string}</h1>
-              {hero.dek && (
-                <p className="dek">{truncate(hero.dek as string, 220)}</p>
-              )}
+              <p className="eyebrow">{(getCategory(heroDoc)?.name ?? '').toUpperCase()}</p>
+              <h1 className="display">{heroDoc.title as string}</h1>
+              {heroDoc.dek && <p className="dek">{truncate(heroDoc.dek as string, 220)}</p>}
               <hr className="rule" />
               <div className="byline">
                 <span
                   className="avatar"
                   style={
-                    hero.authorAvatarUrl
-                      ? { backgroundImage: `url(${hero.authorAvatarUrl as string})` }
+                    heroDoc.authorAvatarUrl
+                      ? { backgroundImage: `url(${heroDoc.authorAvatarUrl as string})` }
                       : {}
                   }
                 />
                 <div>
-                  <p className="author">{hero.authorName as string}</p>
-                  {hero.publishedAt && (
-                    <p className="date">{formatDate(hero.publishedAt as string).toUpperCase()}</p>
+                  <p className="author">{heroDoc.authorName as string}</p>
+                  {heroDoc.publishedAt && (
+                    <p className="date">
+                      {formatDate(heroDoc.publishedAt as string).toUpperCase()}
+                    </p>
                   )}
                 </div>
               </div>
-              <Link className="btn-ghost" href={`/articles/${hero.slug as string}`}>
+              <Link className="btn-ghost" href={`/articles/${heroDoc.slug as string}`}>
                 READ ARTICLE
               </Link>
             </div>
@@ -151,23 +280,23 @@ export default async function HomePage() {
             <p className="dek" style={{ maxWidth: 540, margin: '0 auto 32px' }}>
               Tech, culture, and refined living. Publish your first article to see it featured here.
             </p>
-            <Link className="btn-ghost" href="/submit">SUBMIT AN ARTICLE</Link>
+            <Link className="btn-ghost" href="/submit">
+              SUBMIT AN ARTICLE
+            </Link>
           </div>
         </section>
       )}
 
       {/* ── Featured Coverage ──────────────────────────────── */}
-      {leadStory && (
+      {leadDoc && (
         <section className="coverage">
           <div className="coverage-head">
             <div>
               <p className="eyebrow">FEATURED COVERAGE</p>
-              <h2 className="section-title">
-                {(getCategory(leadStory)?.name) ?? 'Latest'}
-              </h2>
+              <h2 className="section-title">{getCategory(leadDoc)?.name ?? 'Latest'}</h2>
             </div>
-            {getCategory(leadStory) && (
-              <Link className="view-all" href={`/${getCategory(leadStory)!.slug}`}>
+            {getCategory(leadDoc) && (
+              <Link className="view-all" href={`/${getCategory(leadDoc)!.slug}`}>
                 VIEW ALL
               </Link>
             )}
@@ -175,37 +304,37 @@ export default async function HomePage() {
 
           <div className="coverage-grid">
             <article className="lead-story">
-              <Link className="lead-media" href={`/articles/${leadStory.slug as string}`}>
+              <Link className="lead-media" href={`/articles/${leadDoc.slug as string}`}>
                 <span className="cat-pill">
-                  {(getCategory(leadStory)?.name ?? 'ARTICLE').toUpperCase()}
+                  {(getCategory(leadDoc)?.name ?? 'ARTICLE').toUpperCase()}
                 </span>
-                {getImageUrl(leadStory) && (
+                {getImageUrl(leadDoc) && (
                   <Image
-                    src={getImageUrl(leadStory) as string}
-                    alt={leadStory.title as string}
+                    src={getImageUrl(leadDoc) as string}
+                    alt={leadDoc.title as string}
                     fill
                     sizes="(max-width: 1024px) 100vw, 55vw"
                     style={{ objectFit: 'cover' }}
                   />
                 )}
               </Link>
-              <h3 className="lead-title">{leadStory.title as string}</h3>
-              {leadStory.dek && (
-                <p className="lead-dek">{truncate(leadStory.dek as string, 180)}</p>
-              )}
+              <h3 className="lead-title">{leadDoc.title as string}</h3>
+              {leadDoc.dek && <p className="lead-dek">{truncate(leadDoc.dek as string, 180)}</p>}
               <div className="byline">
                 <span
                   className="avatar"
                   style={
-                    leadStory.authorAvatarUrl
-                      ? { backgroundImage: `url(${leadStory.authorAvatarUrl as string})` }
+                    leadDoc.authorAvatarUrl
+                      ? { backgroundImage: `url(${leadDoc.authorAvatarUrl as string})` }
                       : {}
                   }
                 />
                 <div>
-                  <p className="author">{leadStory.authorName as string}</p>
-                  {leadStory.publishedAt && (
-                    <p className="date">{formatDate(leadStory.publishedAt as string).toUpperCase()}</p>
+                  <p className="author">{leadDoc.authorName as string}</p>
+                  {leadDoc.publishedAt && (
+                    <p className="date">
+                      {formatDate(leadDoc.publishedAt as string).toUpperCase()}
+                    </p>
                   )}
                 </div>
               </div>
@@ -229,24 +358,39 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* ── Sponsor Band (static) ──────────────────────────── */}
-      <section className="sponsor" aria-hidden="true">
-        <Image
-          className="sponsor-img"
-          src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=1800&q=80"
-          alt=""
-          width={1800}
-          height={380}
-          style={{ objectFit: 'cover' }}
-        />
-        <div className="sponsor-tint" />
-        <div className="sponsor-inner">
-          <p className="eyebrow eyebrow--light">PRESENTED BY</p>
-          <p className="sponsor-brand">MAISON VERMEIL</p>
-          <p className="sponsor-tag">The art of fragrance, reimagined for the modern connoisseur</p>
-          <span className="btn-ghost btn-ghost--light">EXPLORE</span>
-        </div>
-      </section>
+      {/* ── Sponsor Band ──────────────────────────────────── */}
+      {effectiveSponsor.enabled !== false && (
+        <section className="sponsor" aria-hidden="true">
+          {sponsorImageUrl && (
+            <Image
+              className="sponsor-img"
+              src={sponsorImageUrl}
+              alt=""
+              width={1800}
+              height={380}
+              style={{ objectFit: 'cover' }}
+            />
+          )}
+          <div className="sponsor-tint" />
+          <div className="sponsor-inner">
+            {effectiveSponsor.eyebrow && (
+              <p className="eyebrow eyebrow--light">{effectiveSponsor.eyebrow}</p>
+            )}
+            <p className="sponsor-brand">{effectiveSponsor.brand}</p>
+            {effectiveSponsor.tagline && <p className="sponsor-tag">{effectiveSponsor.tagline}</p>}
+            {effectiveSponsor.linkUrl && (
+              <a
+                href={effectiveSponsor.linkUrl}
+                className="btn-ghost btn-ghost--light"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {effectiveSponsor.linkLabel ?? 'EXPLORE'}
+              </a>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── Featured Stories ───────────────────────────────── */}
       <section className="featured">
@@ -255,7 +399,7 @@ export default async function HomePage() {
           <h2 className="display center">Featured Stories</h2>
         </header>
 
-        {featuredStories.length > 0 ? (
+        {featuredStories.length > 0 && (
           <div className="featured-grid">
             {featuredStories.map((article) => (
               <StoryCard
@@ -272,22 +416,18 @@ export default async function HomePage() {
               />
             ))}
           </div>
-        ) : (
-          <div className="feed-empty">No featured stories yet. Add articles via the admin panel.</div>
         )}
       </section>
 
       {/* ── Editor&apos;s Pick (dark section) ─────────────────── */}
-      {hero && (
+      {pickDoc && (
         <section className="editor-pick">
           <div className="editor-grid">
             <div className="editor-text">
               <p className="eyebrow eyebrow--light">EDITOR&apos;S PICK</p>
-              <h2 className="display display--light">{hero.title as string}</h2>
-              {hero.dek && (
-                <p className="editor-dek">{truncate(hero.dek as string, 260)}</p>
-              )}
-              <Link className="btn-outline" href={`/articles/${hero.slug as string}`}>
+              <h2 className="display display--light">{pickDoc.title as string}</h2>
+              {pickDoc.dek && <p className="editor-dek">{truncate(pickDoc.dek as string, 260)}</p>}
+              <Link className="btn-outline" href={`/articles/${pickDoc.slug as string}`}>
                 DISCOVER MORE
               </Link>
               <hr className="rule rule--light" />
@@ -295,16 +435,14 @@ export default async function HomePage() {
                 <span
                   className="avatar avatar--dark"
                   style={
-                    hero.authorAvatarUrl
-                      ? { backgroundImage: `url(${hero.authorAvatarUrl as string})` }
+                    pickDoc.authorAvatarUrl
+                      ? { backgroundImage: `url(${pickDoc.authorAvatarUrl as string})` }
                       : {}
                   }
                 />
                 <div>
-                  <p className="author">{hero.authorName as string}</p>
-                  <p className="date date--muted">
-                    {(getCategory(hero)?.name) ?? 'Contributor'}
-                  </p>
+                  <p className="author">{pickDoc.authorName as string}</p>
+                  <p className="date date--muted">{getCategory(pickDoc)?.name ?? 'Contributor'}</p>
                 </div>
               </div>
             </div>
@@ -316,11 +454,13 @@ export default async function HomePage() {
       <section className="latest">
         <div className="latest-head">
           <h2 className="section-title">Latest Articles</h2>
-          <Link className="view-all" href="/leaders">VIEW ALL</Link>
+          <Link className="view-all" href="/leaders">
+            VIEW ALL
+          </Link>
         </div>
         <hr className="section-rule" />
 
-        {latestArticles.length > 0 ? (
+        {latestArticles.length > 0 && (
           <div className="latest-grid">
             {latestArticles.map((article) => (
               <LatestCard
@@ -337,8 +477,6 @@ export default async function HomePage() {
               />
             ))}
           </div>
-        ) : (
-          <div className="feed-empty">No articles published yet.</div>
         )}
       </section>
 
@@ -353,13 +491,13 @@ export default async function HomePage() {
           </div>
           <h2 className="display center">Join Our Circle</h2>
           <p className="newsletter-dek">
-            Receive curated insights on tech, culture, and refined living.
-            Delivered weekly to the most discerning readers.
+            Receive curated insights on tech, culture, and refined living. Delivered weekly to the
+            most discerning readers.
           </p>
           <NewsletterForm />
           <p className="newsletter-fineprint">
-            By subscribing, you agree to our{' '}
-            <Link href="/privacy">Privacy Policy</Link> and consent to receive updates.
+            By subscribing, you agree to our <Link href="/privacy">Privacy Policy</Link> and consent
+            to receive updates.
           </p>
         </div>
       </section>

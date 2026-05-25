@@ -18,7 +18,9 @@ export default function LogoutButton() {
       onClick={handleLogout}
       disabled={loading}
       style={{
-        fontSize: 11, fontWeight: 600, letterSpacing: '0.12em',
+        fontSize: 11,
+        fontWeight: 600,
+        letterSpacing: '0.12em',
         textTransform: 'uppercase',
         background: 'transparent',
         border: '1px solid #cfc4c5',
@@ -30,8 +32,16 @@ export default function LogoutButton() {
         fontFamily: "'Hanken Grotesk', sans-serif",
         transition: 'background 0.15s, color 0.15s',
       }}
-      onMouseOver={(e) => { if (!loading) { e.currentTarget.style.background = '#1a1c1c'; e.currentTarget.style.color = '#fff' } }}
-      onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#5d5f5f' }}
+      onMouseOver={(e) => {
+        if (!loading) {
+          e.currentTarget.style.background = '#1a1c1c'
+          e.currentTarget.style.color = '#fff'
+        }
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.background = 'transparent'
+        e.currentTarget.style.color = '#5d5f5f'
+      }}
     >
       {loading ? 'Signing out…' : 'Sign out'}
     </button>

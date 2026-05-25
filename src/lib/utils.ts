@@ -15,11 +15,13 @@ const formatDate = (dateString: string | Date): string => {
 
 const formatDateShort = (dateString: string | Date): string => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).toUpperCase()
+  return date
+    .toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    .toUpperCase()
 }
 
 const slugify = (text: string): string => {
@@ -65,7 +67,7 @@ const lexicalToPlainText = (content: unknown): string => {
 }
 
 const CATEGORIES = ['tech', 'culture', 'fashion', 'showbusiness', 'leaders-stories'] as const
-type CategorySlug = typeof CATEGORIES[number]
+type CategorySlug = (typeof CATEGORIES)[number]
 
 const isCategorySlug = (slug: string): slug is CategorySlug =>
   CATEGORIES.includes(slug as CategorySlug)
@@ -81,6 +83,43 @@ const categoryLabel = (slug: string): string => {
   return labels[slug] ?? slug
 }
 
+type MediaFile = {
+  url?: string
+  sizes?: Record<string, { url?: string } | undefined>
+}
+
+const getArticleImageUrl = (
+  article: Record<string, unknown>,
+  sizePreference: string[] = ['card']
+): string | null => {
+  const media = article.heroImage as MediaFile | null
+  for (const size of sizePreference) {
+    const url = media?.sizes?.[size]?.url
+    if (url) return url
+  }
+  return media?.url ?? (article.heroImageUrl as string | null) ?? null
+}
+
+const formatEditorialDate = (iso: string | null | undefined): string => {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+const formatEditorialDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export {
   formatDate,
   formatDateShort,
@@ -91,5 +130,8 @@ export {
   isCategorySlug,
   categoryLabel,
   CATEGORIES,
+  getArticleImageUrl,
+  formatEditorialDate,
+  formatEditorialDateTime,
 }
 export type { CategorySlug }
