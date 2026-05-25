@@ -171,10 +171,15 @@ export async function submitArticle(input: SubmissionInput): Promise<SubmissionR
   })
 
   if (!input.title?.trim()) return { success: false, error: 'Title is required.' }
+  if (input.title.trim().length > 300)
+    return { success: false, error: 'Title must be 300 characters or fewer.' }
+  if (input.dek && input.dek.length > 500)
+    return { success: false, error: 'Subtitle must be 500 characters or fewer.' }
   let parsedContent: TiptapNode
   try {
     const raw =
       typeof input.contentJson === 'string' ? input.contentJson : JSON.stringify(input.contentJson)
+    if (raw.length > 500_000) return { success: false, error: 'Article content is too large.' }
     parsedContent = JSON.parse(raw) as TiptapNode
   } catch (parseErr) {
     logger.error('contentJson parse failed', {
@@ -186,10 +191,20 @@ export async function submitArticle(input: SubmissionInput): Promise<SubmissionR
   }
   if (isDocEmpty(parsedContent)) return { success: false, error: 'Article body is required.' }
   if (!input.authorName?.trim()) return { success: false, error: 'Author name is required.' }
-  if (!input.authorEmail?.trim() || !input.authorEmail.includes('@'))
+  if (input.authorName.trim().length > 100)
+    return { success: false, error: 'Author name must be 100 characters or fewer.' }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!input.authorEmail?.trim() || !emailRegex.test(input.authorEmail.trim()))
     return { success: false, error: 'A valid email address is required.' }
   if (!input.authorUrl?.trim())
     return { success: false, error: 'A personal website or LinkedIn URL is required.' }
+  try {
+    const u = new URL(input.authorUrl.trim())
+    if (u.protocol !== 'http:' && u.protocol !== 'https:')
+      return { success: false, error: 'URL must start with https://' }
+  } catch {
+    return { success: false, error: 'Please enter a valid URL (e.g. https://linkedin.com/in/you).' }
+  }
   if (!input.heroMediaId) return { success: false, error: 'Please upload a cover image.' }
   if (!input.category) return { success: false, error: 'Please select a section for your article.' }
 
@@ -242,14 +257,14 @@ export async function submitArticle(input: SubmissionInput): Promise<SubmissionR
     }
 
     // Fire-and-forget — email failure must never block the submission response
-    void sendSubmissionAlert({
+    sendSubmissionAlert({
       articleId: String(article.id),
       title: input.title.trim(),
       authorName: input.authorName.trim(),
       authorEmail: input.authorEmail.trim(),
       categoryName,
       dek: input.dek?.trim(),
-    })
+    }).catch((err) => logger.error('Submission alert email failed', { error: String(err) }))
 
     return { success: true, articleId: String(article.id) }
   } catch (err) {

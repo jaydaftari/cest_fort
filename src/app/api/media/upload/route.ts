@@ -5,6 +5,7 @@ import { deleteFilesFromS3 } from '@/lib/s3'
 import { createLogger } from '@/lib/logger'
 
 const logger = createLogger('API:MediaUpload')
+const MIN_BYTES = 1024 // 1 KB
 const MAX_BYTES = 10 * 1024 * 1024 // 10 MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const
 
@@ -17,6 +18,8 @@ export async function POST(req: NextRequest) {
     const replacesMediaId = isInline ? null : formData.get('replacesMediaId')
 
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    if (file.size < MIN_BYTES)
+      return NextResponse.json({ error: 'File is too small' }, { status: 400 })
     if (file.size > MAX_BYTES)
       return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 400 })
 

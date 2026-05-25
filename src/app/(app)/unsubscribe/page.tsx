@@ -20,7 +20,9 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
 
   let status: 'success' | 'already' | 'invalid' | 'no-token' = 'no-token'
 
-  if (token) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+  if (token && uuidRegex.test(token)) {
     try {
       const payload = await getPayloadClient()
       const result = await payload.find({

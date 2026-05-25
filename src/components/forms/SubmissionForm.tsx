@@ -44,6 +44,7 @@ export default function SubmissionForm({ categories }: Props) {
   const [submitted, setSubmitted] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [uploading, setUploading] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const heroInputRef = useRef<HTMLInputElement>(null)
 
@@ -337,13 +338,70 @@ export default function SubmissionForm({ categories }: Props) {
 
       {/* Sticky topbar */}
       <div className="write-topbar">
-        <Link className="write-back" href="/">
-          ← HOME
-        </Link>
-        {uploading && <span className="write-uploading">Uploading…</span>}
-        <button type="submit" className="write-publish-btn" disabled={isPending || uploading}>
-          {isPending ? 'Submitting…' : 'Submit for Review'}
+        <button
+          type="button"
+          className="icon-btn menu-btn"
+          aria-label="Open menu"
+          onClick={() => setDrawerOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+            <line x1="3" y1="7" x2="21" y2="7" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="17" x2="21" y2="17" />
+          </svg>
         </button>
+        {uploading && <span className="write-uploading">Uploading…</span>}
+      </div>
+
+      {/* Drawer */}
+      <div
+        className={`drawer${drawerOpen ? ' is-open' : ''}`}
+        aria-hidden={!drawerOpen}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setDrawerOpen(false)
+        }}
+      >
+        <div className="drawer-panel">
+          <button
+            className="icon-btn drawer-close"
+            aria-label="Close menu"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <line x1="6" y1="6" x2="18" y2="18" />
+              <line x1="18" y1="6" x2="6" y2="18" />
+            </svg>
+          </button>
+          <p className="drawer-eyebrow">SECTIONS</p>
+          <ul className="drawer-nav">
+            {[
+              { label: 'TECH', href: '/tech' },
+              { label: 'CULTURE', href: '/culture' },
+              { label: 'FASHION', href: '/fashion' },
+              { label: 'SHOW-BUSINESS', href: '/showbusiness' },
+              { label: 'LEADERS STORIES', href: '/leaders' },
+            ].map(({ label, href }) => (
+              <li key={href}>
+                <Link href={href} onClick={() => setDrawerOpen(false)}>
+                  {label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="drawer-eyebrow">THE MAGAZINE</p>
+          <ul className="drawer-nav drawer-nav--small">
+            <li>
+              <Link href="/" onClick={() => setDrawerOpen(false)}>
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" onClick={() => setDrawerOpen(false)}>
+                About
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {/* ── Author metadata — top ──────────────────────────────────────────── */}

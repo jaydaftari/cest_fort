@@ -40,7 +40,7 @@ export const Media: CollectionConfig = {
       },
     ],
     adminThumbnail: 'thumbnail',
-    mimeTypes: ['image/*', 'video/*'],
+    mimeTypes: ['image/*'],
   },
   hooks: {
     afterChange: [

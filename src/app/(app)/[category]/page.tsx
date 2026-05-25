@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const { category } = await params
   const { page: pageStr } = await searchParams
   const label = categoryLabel(category)
-  const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
+  const page = Math.min(Math.max(1, parseInt(pageStr ?? '1', 10) || 1), 999)
   const canonical = page > 1 ? `/${category}?page=${page}` : `/${category}`
   return {
     title: label,
@@ -42,7 +42,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 export default async function CategoryPage({ params, searchParams }: PageProps) {
   const { category: slug } = await params
   const { page: pageStr } = await searchParams
-  const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1)
+  const page = Math.min(Math.max(1, parseInt(pageStr ?? '1', 10) || 1), 999)
 
   if (!VALID_SLUGS.includes(slug)) {
     logger.warn('Invalid category slug — 404', { slug })

@@ -10,8 +10,9 @@ type Result = { success: true; alreadySubscribed?: boolean } | { success: false;
 
 export async function subscribeNewsletter(email: string): Promise<Result> {
   const trimmed = email.trim().toLowerCase()
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-  if (!trimmed || !trimmed.includes('@')) {
+  if (!trimmed || !emailRegex.test(trimmed)) {
     return { success: false, error: 'Please enter a valid email address.' }
   }
 
@@ -41,7 +42,9 @@ export async function subscribeNewsletter(email: string): Promise<Result> {
         overrideAccess: true,
       })
       logger.info('Re-subscribed', { email: trimmed })
-      void sendWelcomeEmail({ email: trimmed, unsubscribeToken: sub.unsubscribeToken as string })
+      sendWelcomeEmail({ email: trimmed, unsubscribeToken: sub.unsubscribeToken as string }).catch(
+        (err) => logger.error('Welcome email failed on resubscribe', { error: String(err) })
+      )
       return { success: true }
     }
 
@@ -62,7 +65,9 @@ export async function subscribeNewsletter(email: string): Promise<Result> {
     logger.info('New subscriber created', { email: trimmed })
 
     // Fire-and-forget — email failure must not fail the subscription
-    void sendWelcomeEmail({ email: trimmed, unsubscribeToken: token })
+    sendWelcomeEmail({ email: trimmed, unsubscribeToken: token }).catch((err) =>
+      logger.error('Welcome email failed on new subscribe', { error: String(err) })
+    )
 
     return { success: true }
   } catch (err) {

@@ -12,6 +12,7 @@ import { InlineMedia } from './collections/InlineMedia'
 import { Media } from './collections/Media'
 import { Subscribers } from './collections/Subscribers'
 import { Users } from './collections/Users'
+import { Videos } from './collections/Videos'
 import { SponsorBand } from './globals/SponsorBand'
 import { createLogger } from './lib/logger'
 
@@ -20,12 +21,15 @@ const logger = createLogger('PayloadConfig')
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-if (!process.env.PAYLOAD_SECRET) {
-  logger.warn('PAYLOAD_SECRET not set — using insecure default. Set it in .env for production.')
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is required but not set. Add it to your environment variables.')
 }
 
-if (!process.env.DATABASE_URL) {
-  logger.error('DATABASE_URL is not set. The app will fail to start.')
+if (!process.env.PAYLOAD_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('PAYLOAD_SECRET is required in production.')
+  }
+  logger.warn('PAYLOAD_SECRET not set — using insecure default. Set it in .env for production.')
 }
 
 const useS3 = Boolean(
@@ -61,13 +65,13 @@ export default buildConfig({
       },
     },
   },
-  collections: [Articles, Categories, InlineMedia, Media, Subscribers, Users],
+  collections: [Articles, Categories, InlineMedia, Media, Subscribers, Users, Videos],
   globals: [SponsorBand],
   plugins: [
     ...(useS3
       ? [
           s3Storage({
-            collections: { media: true, 'inline-media': true },
+            collections: { media: true, 'inline-media': true, videos: true },
             bucket: process.env.S3_BUCKET!,
             config: {
               credentials: {
@@ -88,7 +92,11 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL?.replace('sslmode=require', 'sslmode=verify-full'),
+      connectionString: (() => {
+        const url = new URL(process.env.DATABASE_URL!)
+        url.searchParams.set('sslmode', 'verify-full')
+        return url.toString()
+      })(),
     },
   }),
   sharp,
@@ -98,38 +106,6 @@ export default buildConfig({
       adminURL: `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/admin`,
     })
 
-    // ── Seed editorial users once (skips if already exist) ──────────────────
-    // Credentials are read from env vars — set SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD,
-    // SEED_EDITOR_EMAIL, SEED_EDITOR_PASSWORD in your .env before first run.
-    const SEED_USERS = [
-      {
-        email: process.env.SEED_ADMIN_EMAIL ?? '',
-        password: process.env.SEED_ADMIN_PASSWORD ?? '',
-        name: process.env.SEED_ADMIN_NAME ?? 'Admin',
-        role: 'admin',
-      },
-      {
-        email: process.env.SEED_EDITOR_EMAIL ?? '',
-        password: process.env.SEED_EDITOR_PASSWORD ?? '',
-        name: process.env.SEED_EDITOR_NAME ?? 'Editor',
-        role: 'editor',
-      },
-    ].filter((u) => u.email && u.password) // skip entries with no credentials set
-
-    for (const user of SEED_USERS) {
-      try {
-        const existing = await payload.find({
-          collection: 'users',
-          where: { email: { equals: user.email } },
-          limit: 1,
-        })
-        if (existing.totalDocs === 0) {
-          await payload.create({ collection: 'users', data: user })
-          logger.info('Seeded user', { email: user.email, role: user.role })
-        }
-      } catch (err) {
-        logger.warn('Could not seed user', { email: user.email, error: String(err) })
-      }
-    }
+    // Users are created via the Payload admin UI at /admin
   },
 })
